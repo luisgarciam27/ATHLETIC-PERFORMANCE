@@ -1,0 +1,7 @@
+{
+  "name": "Athletic Performance Academy",
+  "description": "Sitio web profesional para la academia de fútbol Athletic Performance en Lima, con registro de alumnos, carnet virtual y gestión de horarios.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
