@@ -6,18 +6,26 @@ import { About } from './components/About';
 import { SchedulesSection } from './components/SchedulesSection';
 import { RegistrationForm } from './components/RegistrationForm';
 import { AdminDashboard } from './components/AdminDashboard';
+import { LoginModal } from './components/LoginModal';
 import { Footer } from './components/Footer';
 import { Student } from './types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const App: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('home');
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('athletic_students');
     if (saved) {
       setStudents(JSON.parse(saved));
+    }
+    
+    // Check session
+    const auth = sessionStorage.getItem('athletic_auth');
+    if (auth === 'true') {
+      setIsAdminLoggedIn(true);
     }
   }, []);
 
@@ -33,9 +41,37 @@ const App: React.FC = () => {
     localStorage.setItem('athletic_students', JSON.stringify(updated));
   };
 
+  const handleAdminLogin = (password: string) => {
+    if (password === 'admin123') {
+      setIsAdminLoggedIn(true);
+      sessionStorage.setItem('athletic_auth', 'true');
+      return true;
+    }
+    return false;
+  };
+
+  const handleLogout = () => {
+    setIsAdminLoggedIn(false);
+    sessionStorage.removeItem('athletic_auth');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  if (isAdminLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900">
+        <AdminDashboard 
+          students={students} 
+          onRegister={handleRegister}
+          onDelete={handleDeleteStudent}
+          onLogout={handleLogout}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-500/30">
-      <Navbar onTabChange={setActiveTab} />
+      <Navbar onTabChange={() => {}} />
       
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-blue-400/10 blur-[120px] rounded-full"></div>
@@ -73,23 +109,15 @@ const App: React.FC = () => {
             <RegistrationForm onRegister={handleRegister} />
           </div>
         </section>
-
-        <section id="dashboard" className="py-24 bg-white">
-          <div className="container mx-auto px-4">
-             <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight uppercase">Gestión de Alumnos</h2>
-                <div className="h-1.5 w-24 bg-gradient-to-r from-blue-600 to-emerald-500 mx-auto rounded-full"></div>
-             </div>
-             <AdminDashboard 
-                students={students} 
-                onRegister={handleRegister}
-                onDelete={handleDeleteStudent}
-             />
-          </div>
-        </section>
       </main>
 
-      <Footer />
+      <Footer onAdminClick={() => setShowLoginModal(true)} />
+
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+        onLogin={handleAdminLogin}
+      />
     </div>
   );
 };

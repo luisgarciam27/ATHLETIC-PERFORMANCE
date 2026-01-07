@@ -73,6 +73,5 @@ export const NAV_LINKS = [
   { name: 'Inicio', href: '#home' },
   { name: 'Nosotros', href: '#about' },
   { name: 'Horarios', href: '#schedules' },
-  { name: 'Inscripción', href: '#register' },
-  { name: 'Panel Admin', href: '#dashboard' }
+  { name: 'Inscripción', href: '#register' }
 ];

@@ -2,7 +2,11 @@
 import React from 'react';
 import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, Zap, ArrowUp, Lock } from 'lucide-react';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onAdminClick: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
   return (
     <footer className="bg-white border-t border-slate-200 pt-20 pb-10 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
@@ -32,10 +36,10 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-3">
             <h4 className="font-black text-slate-900 mb-6 uppercase text-xs tracking-widest">Explorar</h4>
             <ul className="space-y-3 text-slate-500 font-bold text-sm">
-              <li><a href="#home" className="hover:text-blue-600">Inicio</a></li>
-              <li><a href="#about" className="hover:text-blue-600">Metodología</a></li>
-              <li><a href="#schedules" className="hover:text-blue-600">Horarios</a></li>
-              <li><a href="#dashboard" className="hover:text-blue-600">Panel Admin</a></li>
+              <li><a href="#home" className="hover:text-blue-600 transition-colors">Inicio</a></li>
+              <li><a href="#about" className="hover:text-blue-600 transition-colors">Metodología</a></li>
+              <li><a href="#schedules" className="hover:text-blue-600 transition-colors">Horarios</a></li>
+              <li><a href="#register" className="hover:text-blue-600 transition-colors">Inscripción</a></li>
             </ul>
           </div>
 
@@ -52,9 +56,12 @@ export const Footer: React.FC = () => {
                 <Mail size={18} className="text-blue-600" /> hola@athletic.pe
               </li>
               <li className="pt-4">
-                <a href="#dashboard" className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all">
+                <button 
+                  onClick={onAdminClick}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/10"
+                >
                   <Lock size={12} /> Acceso Personal
-                </a>
+                </button>
               </li>
             </ul>
           </div>
