@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar.tsx';
-import { Hero } from './components/Hero.tsx';
-import { About } from './components/About.tsx';
-import { SchedulesSection } from './components/SchedulesSection.tsx';
-import { RegistrationForm } from './components/RegistrationForm.tsx';
-import { AdminDashboard } from './components/AdminDashboard.tsx';
-import { Footer } from './components/Footer.tsx';
-import { Student } from './types.ts';
+import { Navbar } from './components/Navbar';
+import { Hero } from './components/Hero';
+import { About } from './components/About';
+import { SchedulesSection } from './components/SchedulesSection';
+import { RegistrationForm } from './components/RegistrationForm';
+import { AdminDashboard } from './components/AdminDashboard';
+import { Footer } from './components/Footer';
+import { Student } from './types';
 import { motion } from 'framer-motion';
 
 const App: React.FC = () => {
@@ -37,7 +37,6 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-500/30">
       <Navbar onTabChange={setActiveTab} />
       
-      {/* Background Decorative Blurs - Softer for Light Mode */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-blue-400/10 blur-[120px] rounded-full"></div>
         <div className="absolute bottom-[10%] right-[-5%] w-[40%] h-[40%] bg-emerald-400/10 blur-[100px] rounded-full"></div>

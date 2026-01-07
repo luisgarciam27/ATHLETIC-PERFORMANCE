@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { Student } from '../types.ts';
-import { StudentCard } from './StudentCard.tsx';
+import { Student } from '../types';
+import { StudentCard } from './StudentCard';
 import { Search, Printer, QrCode, ArrowRight, UserPlus, X, CreditCard, Calendar, Trash2, Bell, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SCHEDULES, WHATSAPP_NUMBER } from '../constants.tsx';
+import { SCHEDULES, WHATSAPP_NUMBER } from '../constants';
 
 interface AdminDashboardProps {
   students: Student[];
@@ -17,7 +17,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ students, onRegi
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Form state for internal registration
   const [newStudentForm, setNewStudentForm] = useState({
     firstName: '',
     lastName: '',
@@ -74,7 +73,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ students, onRegi
 
   return (
     <div className="space-y-8">
-      {/* Header Actions */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:max-w-md">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -95,7 +93,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ students, onRegi
       </div>
 
       <div className="grid lg:grid-cols-12 gap-12">
-        {/* Table List */}
         <div className="lg:col-span-8">
           <div className="bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden">
             <div className="overflow-x-auto">
@@ -150,7 +147,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ students, onRegi
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-400 font-medium italic">No hay registros guardados en la base de datos local.</td></tr>
+                    <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-400 font-medium italic">No hay registros guardados.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -158,7 +155,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ students, onRegi
           </div>
         </div>
 
-        {/* Detail Panel */}
         <div className="lg:col-span-4">
           <AnimatePresence mode="wait">
             {selectedStudent ? (
@@ -221,14 +217,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ students, onRegi
                     <QrCode size={40} className="text-slate-300" />
                  </div>
                  <h4 className="text-slate-900 font-black text-xl mb-3 uppercase tracking-tight">Panel de Control</h4>
-                 <p className="text-slate-400 font-medium text-sm leading-relaxed">Selecciona un alumno de la lista para gestionar sus pagos, asistencia e imprimir su carnet virtual.</p>
+                 <p className="text-slate-400 font-medium text-sm leading-relaxed">Selecciona un alumno de la lista.</p>
               </div>
             )}
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Modal: Registro Interno */}
       <AnimatePresence>
         {showAddModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
