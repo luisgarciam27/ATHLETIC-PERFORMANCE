@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
-import { About } from './components/About';
-import { SchedulesSection } from './components/SchedulesSection';
-import { RegistrationForm } from './components/RegistrationForm';
-import { AdminDashboard } from './components/AdminDashboard';
-import { Footer } from './components/Footer';
-import { Student } from './types';
+import { Navbar } from './components/Navbar.tsx';
+import { Hero } from './components/Hero.tsx';
+import { About } from './components/About.tsx';
+import { SchedulesSection } from './components/SchedulesSection.tsx';
+import { RegistrationForm } from './components/RegistrationForm.tsx';
+import { AdminDashboard } from './components/AdminDashboard.tsx';
+import { Footer } from './components/Footer.tsx';
+import { Student } from './types.ts';
 import { motion } from 'framer-motion';
 
 const App: React.FC = () => {

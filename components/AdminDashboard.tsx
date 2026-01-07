@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import { Student } from '../types';
-import { StudentCard } from './StudentCard';
+import { Student } from '../types.ts';
+import { StudentCard } from './StudentCard.tsx';
 import { Search, Printer, QrCode, ArrowRight, UserPlus, X, CreditCard, Calendar, Trash2, Bell, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SCHEDULES, WHATSAPP_NUMBER } from '../constants';
+import { SCHEDULES, WHATSAPP_NUMBER } from '../constants.tsx';
 
 interface AdminDashboardProps {
   students: Student[];
