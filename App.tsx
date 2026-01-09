@@ -10,6 +10,7 @@ import { LoginModal } from './components/LoginModal';
 import { Footer } from './components/Footer';
 import { Student, AcademyConfig } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabaseFetch } from './lib/supabase';
 
 const DEFAULT_CONFIG: AcademyConfig = {
   heroImages: [
@@ -31,16 +32,30 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<AcademyConfig>(DEFAULT_CONFIG);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedStudents = localStorage.getItem('athletic_students');
-    if (savedStudents) setStudents(JSON.parse(savedStudents));
-    
-    const savedConfig = localStorage.getItem('athletic_config');
-    if (savedConfig) setConfig(JSON.parse(savedConfig));
-    
-    const auth = sessionStorage.getItem('athletic_auth');
-    if (auth === 'true') setIsAdminLoggedIn(true);
+    const loadData = async () => {
+      // Cargar Alumnos de LocalStorage (temporalmente hasta tener tabla de alumnos)
+      const savedStudents = localStorage.getItem('athletic_students');
+      if (savedStudents) setStudents(JSON.parse(savedStudents));
+      
+      // Cargar Configuración desde Supabase
+      const cloudConfig = await supabaseFetch('GET', 'academy_config');
+      if (cloudConfig) {
+        setConfig({
+          heroImages: cloudConfig.hero_images,
+          aboutImages: cloudConfig.about_images,
+          welcomeMessage: cloudConfig.welcome_message
+        });
+      }
+      
+      const auth = sessionStorage.getItem('athletic_auth');
+      if (auth === 'true') setIsAdminLoggedIn(true);
+      setIsLoading(false);
+    };
+
+    loadData();
   }, []);
 
   const handleRegister = (newStudent: Student) => {
@@ -49,9 +64,14 @@ const App: React.FC = () => {
     localStorage.setItem('athletic_students', JSON.stringify(updated));
   };
 
-  const handleUpdateConfig = (newConfig: AcademyConfig) => {
+  const handleUpdateConfig = async (newConfig: AcademyConfig) => {
     setConfig(newConfig);
-    localStorage.setItem('athletic_config', JSON.stringify(newConfig));
+    // Persistir en Supabase
+    await supabaseFetch('PATCH', 'academy_config', {
+      hero_images: newConfig.heroImages,
+      about_images: newConfig.aboutImages,
+      welcome_message: newConfig.welcomeMessage
+    });
   };
 
   const handleDeleteStudent = (id: string) => {
@@ -75,6 +95,21 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  if (isLoading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-slate-900">
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="w-16 h-16 bg-blue-600 rounded-2xl"></div>
+          <span className="text-white font-black tracking-widest text-[10px] uppercase">Cargando Academia...</span>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (isAdminLoggedIn) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -93,25 +128,16 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-500/30">
       <Navbar onTabChange={() => {}} />
-      
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-blue-400/10 blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-[10%] right-[-5%] w-[40%] h-[40%] bg-emerald-400/10 blur-[100px] rounded-full"></div>
-      </div>
-
       <main>
         <section id="home">
           <Hero images={config.heroImages} />
         </section>
-
         <section id="about" className="py-24 relative">
           <About images={config.aboutImages} />
         </section>
-
         <section id="schedules" className="py-24 relative overflow-hidden bg-white/40 border-y border-slate-200">
           <SchedulesSection />
         </section>
-
         <section id="register" className="py-24 bg-slate-100/50 relative">
           <div className="container mx-auto px-4 relative z-10">
             <motion.div 
@@ -131,9 +157,7 @@ const App: React.FC = () => {
           </div>
         </section>
       </main>
-
       <Footer onAdminClick={() => setShowLoginModal(true)} />
-
       <LoginModal 
         isOpen={showLoginModal} 
         onClose={() => setShowLoginModal(false)} 
