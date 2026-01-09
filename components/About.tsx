@@ -30,7 +30,11 @@ const features = [
   }
 ];
 
-export const About: React.FC = () => {
+interface AboutProps {
+  images: string[];
+}
+
+export const About: React.FC<AboutProps> = ({ images }) => {
   return (
     <div className="container mx-auto px-4">
       <div className="grid lg:grid-cols-2 gap-20 items-center">
@@ -70,19 +74,19 @@ export const About: React.FC = () => {
             className="grid grid-cols-2 gap-4"
           >
             <div className="space-y-4 mt-8">
-               <div className="overflow-hidden rounded-[2rem] shadow-lg">
-                 <img src="https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?auto=format&fit=crop&q=80&w=800" className="w-full h-48 object-cover" alt="Soccer" />
+               <div className="overflow-hidden rounded-[2rem] shadow-lg aspect-square">
+                 <img src={images[0]} className="w-full h-full object-cover" alt="Soccer" />
                </div>
-               <div className="overflow-hidden rounded-[2rem] shadow-lg">
-                 <img src="https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&q=80&w=800" className="w-full h-64 object-cover" alt="Training" />
+               <div className="overflow-hidden rounded-[2rem] shadow-lg aspect-[3/4]">
+                 <img src={images[1]} className="w-full h-full object-cover" alt="Training" />
                </div>
             </div>
             <div className="space-y-4">
-               <div className="overflow-hidden rounded-[2rem] shadow-lg">
-                 <img src="https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&q=80&w=800" className="w-full h-64 object-cover" alt="Kids" />
+               <div className="overflow-hidden rounded-[2rem] shadow-lg aspect-[3/4]">
+                 <img src={images[2]} className="w-full h-full object-cover" alt="Kids" />
                </div>
-               <div className="overflow-hidden rounded-[2rem] shadow-lg">
-                 <img src="https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&q=80&w=800" className="w-full h-48 object-cover" alt="Team" />
+               <div className="overflow-hidden rounded-[2rem] shadow-lg aspect-square">
+                 <img src={images[3]} className="w-full h-full object-cover" alt="Team" />
                </div>
             </div>
           </motion.div>

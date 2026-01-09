@@ -1,38 +1,82 @@
 
-import { motion } from 'framer-motion';
-import { Play, Trophy, ArrowRight, Activity, Users, ShieldCheck } from 'lucide-react';
-import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Trophy, ArrowRight, Activity, Users, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
-export const Hero: React.FC = () => {
+interface HeroProps {
+  images: string[];
+}
+
+const sliderContent = [
+  {
+    tag: "ESTÁNDAR DE ALTO RENDIMIENTO - LIMA",
+    title: "FORJANDO LOS LÍDERES DEL MAÑANA",
+    desc: "Nuestra metodología integra el talento natural con disciplina táctica y apoyo emocional. Únete a la academia donde el éxito es una consecuencia de la formación integral.",
+  },
+  {
+    tag: "INSCRIPCIONES ABIERTAS 2024",
+    title: "MÁS QUE FÚTBOL, UNA PASIÓN",
+    desc: "Desarrolla habilidades competitivas en un ambiente profesional con los mejores entrenadores licenciados. Cupos limitados por categoría.",
+  },
+  {
+    tag: "ELITE TRAINING CENTER",
+    title: "ENTRENA COMO UN PROFESIONAL",
+    desc: "Tecnología y metodología aplicada al fútbol base. Seguimiento individualizado del progreso de cada atleta mediante nuestro sistema digital.",
+  }
+];
+
+export const Hero: React.FC<HeroProps> = ({ images }) => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [images.length]);
+
+  const nextSlide = () => setIndex((prev) => (prev + 1) % images.length);
+  const prevSlide = () => setIndex((prev) => (prev - 1 + images.length) % images.length);
+
+  const currentContent = sliderContent[index % sliderContent.length];
+
   return (
-    <div className="relative min-h-[90vh] flex items-center bg-slate-50 overflow-hidden pt-20">
-      {/* Elementos decorativos de fondo */}
-      <div className="absolute inset-0 z-0">
+    <div className="relative min-h-[95vh] flex items-center bg-slate-50 overflow-hidden pt-20">
+      {/* Background elements - Static */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/4 right-[10%] w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[120px]"></div>
         <div className="absolute bottom-[-10%] left-[5%] w-[400px] h-[400px] bg-emerald-300/15 rounded-full blur-[100px]"></div>
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
       </div>
 
       <div className="container mx-auto px-4 z-10 grid lg:grid-cols-12 gap-12 items-center">
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="lg:col-span-6"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-[10px] font-bold tracking-widest mb-8 text-blue-600 uppercase">
-            <Activity size={14} />
-            ESTÁNDAR DE ALTO RENDIMIENTO - LIMA
-          </div>
-          
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] mb-8 tracking-tighter text-slate-900">
-            FORJANDO LOS <br />
-            <span className="text-gradient">LÍDERES</span> DEL MAÑANA
-          </h1>
-          
-          <p className="text-lg md:text-xl text-slate-500 max-w-xl mb-12 font-medium leading-relaxed">
-            Nuestra metodología integra el talento natural con disciplina táctica y apoyo emocional. Únete a la academia donde el éxito es una consecuencia de la formación integral.
-          </p>
+        {/* Left Column: Stable text content */}
+        <div className="lg:col-span-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-[10px] font-bold tracking-widest mb-8 text-blue-600 uppercase">
+                <Activity size={14} />
+                {currentContent.tag}
+              </div>
+              
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] mb-8 tracking-tighter text-slate-900">
+                {currentContent.title.split(' ').map((word, i) => (
+                  word === 'LÍDERES' || word === 'PASIÓN' || word === 'PROFESIONAL' ? 
+                  <span key={i} className="text-gradient block md:inline">{word} </span> : word + ' '
+                ))}
+              </h1>
+              
+              <p className="text-lg md:text-xl text-slate-500 max-w-xl mb-12 font-medium leading-relaxed">
+                {currentContent.desc}
+              </p>
+            </motion.div>
+          </AnimatePresence>
           
           <div className="flex flex-wrap gap-6 items-center">
             <a 
@@ -67,61 +111,74 @@ export const Hero: React.FC = () => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, x: 30 }}
-          animate={{ opacity: 1, scale: 1, x: 0 }}
-          transition={{ duration: 1, delay: 0.2 }}
-          className="lg:col-span-6 relative"
-        >
-          {/* Contenedor Premium de la Foto */}
-          <div className="relative group">
-            {/* Brillo de fondo dinámico */}
-            <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-emerald-500 rounded-[3rem] blur-2xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
-            
-            <div className="relative bg-white p-4 rounded-[2.5rem] shadow-2xl border border-white overflow-hidden">
-               {/* Imagen de alta calidad de niños en equipo de fútbol */}
-               <img 
-                 src="https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=2070&auto=format&fit=crop" 
-                 alt="Equipo Athletic Performance"
-                 className="w-full h-[450px] rounded-[2rem] object-cover shadow-inner transition-transform duration-700 group-hover:scale-[1.05]"
-               />
-               
-               {/* Overlay sutil de marca */}
-               <div className="absolute inset-x-4 bottom-4 bg-white/90 backdrop-blur-md p-6 rounded-[1.5rem] border border-white/20 shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-1">Entrenamiento 2024</p>
-                      <p className="text-slate-900 font-bold text-lg">Categoría Formativa Élite</p>
-                    </div>
-                    <div className="flex -space-x-3">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center overflow-hidden">
-                           <img src={`https://i.pravatar.cc/100?u=${i}`} alt="player" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-               </div>
-            </div>
-
-            {/* Badge de Éxito Flotante */}
-            <motion.div 
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity }}
-              className="absolute -top-6 -right-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-2xl z-20 flex items-center gap-4 hidden md:flex"
+        {/* Right Column: Dynamic Image Slider */}
+        <div className="lg:col-span-6 relative h-[600px] flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              exit={{ opacity: 0, scale: 1.1, rotate: 2 }}
+              transition={{ duration: 0.8, ease: "circOut" }}
+              className="relative w-full h-full p-4"
             >
-              <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-                <Trophy className="text-emerald-600" size={24} />
+              {/* Decorative glows */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-emerald-500/20 rounded-[3rem] blur-2xl"></div>
+              
+              <div className="relative bg-white p-4 rounded-[3rem] shadow-2xl border border-white h-full overflow-hidden">
+                 <img 
+                   src={images[index] || images[0]} 
+                   alt="Academy Action"
+                   className="w-full h-full rounded-[2.5rem] object-cover shadow-inner"
+                 />
+                 
+                 {/* Slide Indicator Overlay */}
+                 <div className="absolute inset-x-8 bottom-8 flex justify-between items-center bg-white/20 backdrop-blur-xl p-6 rounded-[2rem] border border-white/30 shadow-2xl">
+                    <div>
+                      <p className="text-white font-black text-[10px] uppercase tracking-widest mb-1 opacity-80">PROXIMA CATEGORIA</p>
+                      <p className="text-white font-bold text-xl leading-none">SUB-10 ÉLITE</p>
+                    </div>
+                    <div className="flex gap-2">
+                       <button onClick={prevSlide} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-blue-600 flex items-center justify-center transition-all backdrop-blur-md">
+                         <ChevronLeft size={20} />
+                       </button>
+                       <button onClick={nextSlide} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-blue-600 flex items-center justify-center transition-all backdrop-blur-md">
+                         <ChevronRight size={20} />
+                       </button>
+                    </div>
+                 </div>
               </div>
-              <div>
-                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest leading-none mb-1">Cuna de Campeones</p>
-                <p className="text-xl font-black text-slate-900">Élite Lima</p>
-              </div>
+
+              {/* Float Badge */}
+              <motion.div 
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute -top-6 -right-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-2xl z-20 flex items-center gap-4 hidden md:flex"
+              >
+                <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
+                  <Trophy className="text-emerald-600" size={24} />
+                </div>
+                <div>
+                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Cuna de Campeones</p>
+                  <p className="text-xl font-black text-slate-900">Nivel Pro</p>
+                </div>
+              </motion.div>
             </motion.div>
-          </div>
-        </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Slide dots */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+        {images.map((_, i) => (
+          <button 
+            key={i}
+            onClick={() => setIndex(i)}
+            className={`h-1.5 rounded-full transition-all ${index === i ? 'w-10 bg-blue-600 shadow-lg shadow-blue-500/50' : 'w-2 bg-slate-300 hover:bg-slate-400'}`}
+          />
+        ))}
       </div>
     </div>
   );
