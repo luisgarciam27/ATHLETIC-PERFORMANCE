@@ -2,10 +2,38 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Trophy, ArrowRight, Activity, Users, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { StoryViewer } from './StoryViewer';
 
 interface HeroProps {
   images: string[];
 }
+
+const staffStories = [
+  {
+    id: 's1',
+    type: 'video' as const,
+    url: 'https://cdn.pixabay.com/video/2021/04/12/70860-537442186_large.mp4', // Ejemplo: Video de entrenamiento
+    name: 'Prof. Carlos Ruíz',
+    role: 'Director Técnico - Licencia PRO',
+    duration: 10000
+  },
+  {
+    id: 's2',
+    type: 'image' as const,
+    url: 'https://images.unsplash.com/photo-1526232386154-75127e4dd0a8?q=80&w=800',
+    name: 'Coach Martha Solano',
+    role: 'Especialista en Psicomotricidad',
+    duration: 5000
+  },
+  {
+    id: 's3',
+    type: 'video' as const,
+    url: 'https://cdn.pixabay.com/video/2020/07/21/45089-441617300_large.mp4', // Ejemplo: Video táctico
+    name: 'Técnico Jorge Paz',
+    role: 'Preparador de Arqueros',
+    duration: 8000
+  }
+];
 
 const sliderContent = [
   {
@@ -27,6 +55,7 @@ const sliderContent = [
 
 export const Hero: React.FC<HeroProps> = ({ images }) => {
   const [index, setIndex] = useState(0);
+  const [showStories, setShowStories] = useState(false);
 
   useEffect(() => {
     if (!images || images.length === 0) return;
@@ -89,9 +118,13 @@ export const Hero: React.FC<HeroProps> = ({ images }) => {
               MATRÍCULA ABIERTA
               <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
             </a>
-            <button className="flex items-center gap-4 text-slate-700 font-bold hover:text-blue-600 transition-colors group">
-              <span className="w-14 h-14 rounded-full border border-slate-200 flex items-center justify-center bg-white group-hover:border-blue-500 transition-all shadow-sm">
-                <Play className="fill-slate-700 ml-1 group-hover:fill-blue-600" size={22} />
+            <button 
+              onClick={() => setShowStories(true)}
+              className="flex items-center gap-4 text-slate-700 font-bold hover:text-blue-600 transition-colors group"
+            >
+              <span className="w-14 h-14 rounded-full border border-slate-200 flex items-center justify-center bg-white group-hover:border-blue-500 transition-all shadow-sm relative">
+                <span className="absolute inset-0 rounded-full bg-blue-500/10 animate-ping group-hover:bg-blue-500/20"></span>
+                <Play className="fill-slate-700 ml-1 group-hover:fill-blue-600 relative z-10" size={22} />
               </span>
               NUESTRO STAFF
             </button>
@@ -137,6 +170,13 @@ export const Hero: React.FC<HeroProps> = ({ images }) => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Story Viewer Modal */}
+      <StoryViewer 
+        isOpen={showStories} 
+        onClose={() => setShowStories(false)} 
+        stories={staffStories} 
+      />
     </div>
   );
 };
