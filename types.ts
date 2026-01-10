@@ -32,6 +32,7 @@ export type Student = {
   lastName: string;
   birthDate: string;
   category: string;
+  modality: string;
   parentName: string;
   parentPhone: string;
   parentEmail: string;
@@ -44,10 +45,21 @@ export type Student = {
   paymentHistory?: PaymentRecord[];
 };
 
+export type IntroSlide = {
+  id: string;
+  type: 'image' | 'video';
+  url: string;
+  title: string;
+  subtitle: string;
+  duration: number;
+};
+
 export type AcademyConfig = {
+  logoUrl: string;
   heroImages: string[];
   aboutImages: string[];
   welcomeMessage: string;
+  introSlides: IntroSlide[];
 };
 
 export type Message = {
@@ -55,4 +67,4 @@ export type Message = {
   sender: string;
   content: string;
   timestamp: string;
-};
+}

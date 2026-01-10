@@ -5,10 +5,11 @@ import { NAV_LINKS } from '../constants';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
+  logoUrl?: string;
   onTabChange: (tab: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onTabChange }) => {
+export const Navbar: React.FC<NavbarProps> = ({ logoUrl, onTabChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -24,9 +25,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onTabChange }) => {
     <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-slate-200 py-3 shadow-sm' : 'bg-transparent py-6'}`}>
       <div className="container mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-             <Zap className="text-white fill-white" size={24} />
-          </div>
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
+          ) : (
+            <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+               <Zap className="text-white fill-white" size={24} />
+            </div>
+          )}
           <div className="flex flex-col">
             <span className="font-bold text-xl tracking-tighter leading-none text-slate-900">ATHLETIC</span>
             <span className="text-[9px] tracking-[0.3em] font-bold text-emerald-600">PERFORMANCE</span>

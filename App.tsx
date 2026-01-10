@@ -9,23 +9,34 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { LoginModal } from './components/LoginModal';
 import { Footer } from './components/Footer';
 import { IntroPortal } from './components/IntroPortal';
-import { Student, AcademyConfig } from './types';
+import { Student, AcademyConfig, IntroSlide } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabaseFetch } from './lib/supabase';
+import { AlertCircle, Database, Copy, Check, RefreshCw } from 'lucide-react';
+
+const DEFAULT_INTRO: IntroSlide[] = [
+  {
+    id: 'intro-1',
+    type: 'video',
+    url: 'https://cdn.pixabay.com/video/2021/04/12/70860-537442186_large.mp4',
+    title: 'EL COMIENZO',
+    subtitle: 'DE UNA LEYENDA',
+    duration: 6000
+  }
+];
 
 const DEFAULT_CONFIG: AcademyConfig = {
+  logoUrl: "https://raw.githubusercontent.com/frapastor/assets/main/athletic_logo.png",
   heroImages: [
     "https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=2070&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1526232386154-75127e4dd0a8?q=80&w=2070&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=2070&auto=format&fit=crop"
+    "https://images.unsplash.com/photo-1526232761682-d26e03ac148e?q=80&w=2070&auto=format&fit=crop"
   ],
   aboutImages: [
     "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?q=80&w=800",
-    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=800",
-    "https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=800",
-    "https://images.unsplash.com/photo-1526232386154-75127e4dd0a8?q=80&w=800"
+    "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=800"
   ],
-  welcomeMessage: "Inscripciones abiertas para el ciclo 2024. Únete a la familia Athletic Performance y vive el fútbol con excelencia."
+  welcomeMessage: "Inscripciones abiertas para el ciclo 2024. Únete a la familia Athletic Performance.",
+  introSlides: DEFAULT_INTRO
 };
 
 const App: React.FC = () => {
@@ -34,144 +45,236 @@ const App: React.FC = () => {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showIntro, setShowIntro] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+  const [dbError, setDbError] = useState<boolean>(false);
+  const [copied, setCopied] = useState(false);
+
+  const fetchStudents = async () => {
+    const data: any = await supabaseFetch('GET', 'students');
+    if (data && data.error) {
+      // Si la tabla no existe o hay error de esquema, mostramos pantalla de ayuda
+      if (data.error.isTableMissing || data.error.code === 'PGRST204' || data.error.code === 'PGRST205') {
+        setDbError(true);
+        return;
+      }
+    }
+    if (data && Array.isArray(data)) {
+      setStudents(data.map(s => ({
+        ...s,
+        firstName: s.first_name || '',
+        lastName: s.last_name || '',
+        birthDate: s.birth_date || '',
+        parentName: s.parent_name || '',
+        parentPhone: s.parent_phone || '',
+        parentEmail: s.parent_email || '',
+        paymentStatus: s.payment_status || 'Pending',
+        nextPaymentDate: s.next_payment_date || '',
+        qrCode: s.qr_code || '',
+        paymentHistory: s.payment_history || [],
+        attendanceHistory: s.attendance_history || []
+      })));
+    }
+  };
+
+  const fetchConfig = async () => {
+    const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
+    if (cloudConfig && !cloudConfig.error) {
+      setConfig({
+        logoUrl: cloudConfig.logo_url || DEFAULT_CONFIG.logoUrl,
+        heroImages: cloudConfig.hero_images || DEFAULT_CONFIG.heroImages,
+        aboutImages: cloudConfig.about_images || DEFAULT_CONFIG.aboutImages,
+        welcomeMessage: cloudConfig.welcome_message || DEFAULT_CONFIG.welcomeMessage,
+        introSlides: cloudConfig.intro_slides || DEFAULT_CONFIG.introSlides
+      });
+    } else if (cloudConfig?.error?.isTableMissing) {
+      setDbError(true);
+    }
+  };
 
   useEffect(() => {
     const initApp = async () => {
-      // Check if intro was already seen in this session
-      const introSeen = sessionStorage.getItem('athletic_intro_seen');
-      if (!introSeen) {
-        setShowIntro(true);
+      try {
+        await Promise.all([fetchStudents(), fetchConfig()]);
+      } catch (err) {
+        console.error("Initialization failed:", err);
+      } finally {
+        const auth = sessionStorage.getItem('athletic_auth');
+        if (auth === 'true') {
+          setIsAdminLoggedIn(true);
+          setShowIntro(false);
+        }
+        setIsLoading(false);
       }
-
-      const savedStudents = localStorage.getItem('athletic_students');
-      if (savedStudents) setStudents(JSON.parse(savedStudents));
-      
-      const cloudData = await supabaseFetch('GET', 'academy_config');
-      if (cloudData && cloudData.hero_images) {
-        setConfig({
-          heroImages: cloudData.hero_images,
-          aboutImages: cloudData.about_images,
-          welcomeMessage: cloudData.welcome_message
-        });
-      }
-      
-      const auth = sessionStorage.getItem('athletic_auth');
-      if (auth === 'true') setIsAdminLoggedIn(true);
-      setIsLoading(false);
     };
 
     initApp();
   }, []);
 
-  const handleIntroComplete = () => {
-    setShowIntro(false);
-    sessionStorage.setItem('athletic_intro_seen', 'true');
+  const SQL_SCRIPT = `-- SOLUCIÓN: Ejecuta esto en el SQL Editor de Supabase
+DROP TABLE IF EXISTS public.academy_config;
+CREATE TABLE public.academy_config (
+  id BIGINT PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY,
+  logo_url TEXT,
+  hero_images TEXT[] DEFAULT '{}',
+  about_images TEXT[] DEFAULT '{}',
+  welcome_message TEXT,
+  intro_slides JSONB DEFAULT '[]'::jsonb,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+ALTER TABLE public.academy_config DISABLE ROW LEVEL SECURITY;
+GRANT ALL ON TABLE public.academy_config TO anon, authenticated, service_role;
+INSERT INTO public.academy_config (id, logo_url, welcome_message) VALUES (1, '${DEFAULT_CONFIG.logoUrl}', 'Bienvenidos');
+NOTIFY pgrst, 'reload schema';`;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(SQL_SCRIPT);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleRegister = (newStudent: Student) => {
-    const updated = [...students, newStudent];
-    setStudents(updated);
-    localStorage.setItem('athletic_students', JSON.stringify(updated));
-  };
-
-  const handleUpdateConfig = async (newConfig: AcademyConfig) => {
-    const result = await supabaseFetch('PATCH', 'academy_config', {
-      hero_images: newConfig.heroImages,
-      about_images: newConfig.aboutImages,
-      welcome_message: newConfig.welcomeMessage,
-      updated_at: new Date().toISOString()
-    });
-
-    if (result) {
-      setConfig(newConfig);
-      return true;
-    }
-    return false;
-  };
-
-  const handleLogout = () => {
-    setIsAdminLoggedIn(false);
-    sessionStorage.removeItem('athletic_auth');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  if (isLoading) {
+  if (dbError) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-slate-900">
-        <motion.div 
-          animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className="w-12 h-12 bg-blue-600 rounded-xl"
-        />
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 text-white font-ubuntu">
+        <div className="max-w-2xl w-full bg-slate-800 rounded-[3rem] p-12 border border-slate-700 shadow-2xl">
+          <div className="w-20 h-20 bg-blue-500/20 rounded-3xl flex items-center justify-center text-blue-500 mb-8">
+            <Database size={40} />
+          </div>
+          <h1 className="text-4xl font-black mb-4 uppercase tracking-tight leading-none">Conflicto de Esquema</h1>
+          <p className="text-slate-400 mb-10 leading-relaxed font-medium">
+            La tabla `academy_config` existe pero no coincide con la versión que requiere la App (Error 42703). Debemos recrearla para limpiar las columnas obsoletas.
+          </p>
+          
+          <div className="bg-slate-900 rounded-2xl p-6 mb-8 border border-slate-700 relative group">
+            <button 
+              onClick={copyToClipboard}
+              className="absolute top-4 right-4 p-2 bg-slate-800 rounded-lg hover:bg-blue-600 transition-all text-slate-400 hover:text-white"
+            >
+              {copied ? <Check size={18} /> : <Copy size={18} />}
+            </button>
+            <pre className="text-blue-400 font-mono text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed">
+              {SQL_SCRIPT}
+            </pre>
+          </div>
+
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full py-5 bg-blue-600 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3"
+          >
+            <RefreshCw size={18} /> Re-sincronizar Esquema
+          </button>
+        </div>
       </div>
     );
   }
 
-  if (isAdminLoggedIn) {
-    return (
-      <AdminDashboard 
-        students={students} 
-        config={config}
-        onUpdateConfig={handleUpdateConfig}
-        onRegister={handleRegister}
-        onLogout={handleLogout}
-      />
-    );
-  }
+  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900"><div className="w-12 h-12 bg-blue-600 rounded-xl animate-spin" /></div>;
 
   return (
     <>
-      <AnimatePresence mode="wait">
-        {showIntro && <IntroPortal key="intro" onComplete={handleIntroComplete} />}
-      </AnimatePresence>
-
-      <motion.div 
-        className="min-h-screen bg-slate-50 text-slate-900"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showIntro ? 0 : 1 }}
-        transition={{ duration: 0.8 }}
-      >
-        <Navbar onTabChange={() => {}} />
-        <main>
-          <section id="home">
+      <AnimatePresence>{showIntro && <IntroPortal key="intro" onComplete={() => setShowIntro(false)} slides={config.introSlides} />}</AnimatePresence>
+      <motion.div className="min-h-screen bg-slate-50" animate={{ opacity: showIntro ? 0 : 1 }}>
+        {isAdminLoggedIn ? (
+          <AdminDashboard 
+            students={students} 
+            config={config} 
+            onUpdateConfig={handleUpdateConfig} 
+            onRegister={async (s) => { const r = await handleRegister(s); return r; }} 
+            onUpdateStudent={handleUpdateStudent} 
+            onDelete={handleDeleteStudent} 
+            onLogout={() => { setIsAdminLoggedIn(false); sessionStorage.removeItem('athletic_auth'); }} 
+          />
+        ) : (
+          <>
+            <Navbar logoUrl={config.logoUrl} onTabChange={() => {}} />
             <Hero images={config.heroImages} />
-          </section>
-          <section id="about" className="py-24">
             <About images={config.aboutImages} />
-          </section>
-          <section id="schedules" className="py-24 bg-white/40 border-y">
             <SchedulesSection />
-          </section>
-          <section id="register" className="py-24 bg-slate-100/50">
-            <div className="container mx-auto px-4 text-center mb-16">
-              <h2 className="text-5xl md:text-6xl font-black mb-6 uppercase tracking-tighter">
-                INICIA TU <span className="text-gradient">CAMINO</span>
-              </h2>
-              <p className="text-slate-500 text-lg max-w-2xl mx-auto font-medium">
-                {config.welcomeMessage}
-              </p>
-            </div>
-            <RegistrationForm onRegister={handleRegister} />
-          </section>
-        </main>
-        <Footer onAdminClick={() => setShowLoginModal(true)} />
-        <LoginModal 
-          isOpen={showLoginModal} 
-          onClose={() => setShowLoginModal(false)} 
-          onLogin={(pass) => {
-            if (pass === 'admin123') {
-              setIsAdminLoggedIn(true);
-              sessionStorage.setItem('athletic_auth', 'true');
-              return true;
-            }
-            return false;
-          }}
-        />
+            <section id="register" className="py-24 bg-slate-100"><RegistrationForm onRegister={handleRegister} /></section>
+            <Footer logoUrl={config.logoUrl} onAdminClick={() => setShowLoginModal(true)} />
+            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => { if(p==='admin123'){ setIsAdminLoggedIn(true); sessionStorage.setItem('athletic_auth','true'); return true; } return false; }} />
+          </>
+        )}
       </motion.div>
     </>
   );
+
+  async function handleRegister(newStudent: Student) {
+    const payload = {
+      first_name: newStudent.firstName,
+      last_name: newStudent.lastName,
+      birth_date: newStudent.birthDate,
+      category: newStudent.category,
+      modality: newStudent.modality,
+      parent_name: newStudent.parentName,
+      parent_phone: newStudent.parentPhone,
+      parent_email: newStudent.parentEmail,
+      address: newStudent.address,
+      payment_status: newStudent.paymentStatus || 'Pending',
+      next_payment_date: newStudent.nextPaymentDate,
+      qr_code: newStudent.qrCode,
+      payment_history: [],
+      attendance_history: []
+    };
+
+    const result = await supabaseFetch('POST', 'students', payload);
+    if (result && !result.error) {
+      await fetchStudents();
+      return true;
+    }
+    return false;
+  }
+
+  async function handleUpdateStudent(student: Student) {
+    const payload = {
+      id: student.id,
+      first_name: student.firstName,
+      last_name: student.lastName,
+      birth_date: student.birthDate,
+      category: student.category,
+      modality: student.modality,
+      parent_name: student.parentName,
+      parent_phone: student.parentPhone,
+      parent_email: student.parentEmail,
+      address: student.address,
+      payment_status: student.paymentStatus,
+      next_payment_date: student.nextPaymentDate,
+      payment_history: student.paymentHistory
+    };
+
+    const result = await supabaseFetch('PATCH', 'students', payload);
+    if (result && !result.error) {
+      await fetchStudents();
+      return true;
+    }
+    return false;
+  }
+
+  async function handleDeleteStudent(id: string) {
+    if (window.confirm('¿Eliminar alumno? Esta acción no se puede deshacer.')) {
+      const result = await supabaseFetch('DELETE', 'students', { id });
+      if (result !== null && !result.error) {
+        await fetchStudents();
+      }
+    }
+  }
+
+  async function handleUpdateConfig(newConfig: AcademyConfig) {
+    const result = await supabaseFetch('PATCH', 'academy_config', {
+      id: 1,
+      logo_url: newConfig.logoUrl,
+      hero_images: newConfig.heroImages,
+      about_images: newConfig.aboutImages,
+      welcome_message: newConfig.welcomeMessage,
+      intro_slides: newConfig.introSlides,
+      updated_at: new Date().toISOString()
+    });
+
+    if (result && !result.error) {
+      setConfig(newConfig);
+      return true;
+    }
+    return false;
+  }
 };
 
-// Fix: Add missing default export for index.tsx to resolve "Module has no default export" error.
 export default App;

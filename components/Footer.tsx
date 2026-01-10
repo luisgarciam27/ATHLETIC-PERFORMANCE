@@ -3,19 +3,24 @@ import React from 'react';
 import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, Zap, ArrowUp, Lock } from 'lucide-react';
 
 interface FooterProps {
+  logoUrl?: string;
   onAdminClick: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
+export const Footer: React.FC<FooterProps> = ({ logoUrl, onAdminClick }) => {
   return (
     <footer className="bg-white border-t border-slate-200 pt-20 pb-10 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-12 gap-16 mb-16">
           <div className="lg:col-span-5 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
-                <Zap className="text-white fill-white" size={22} />
-              </div>
+              {logoUrl ? (
+                <img src={logoUrl} alt="Logo" className="h-10 w-auto object-contain" />
+              ) : (
+                <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <Zap className="text-white fill-white" size={22} />
+                </div>
+              )}
               <div>
                 <span className="font-black text-xl tracking-tighter leading-none text-slate-900 uppercase">ATHLETIC</span>
                 <p className="text-[8px] tracking-[0.3em] font-bold text-emerald-600 uppercase">Performance Academy</p>

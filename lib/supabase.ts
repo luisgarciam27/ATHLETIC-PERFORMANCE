@@ -1,10 +1,14 @@
-
 const SUPABASE_URL = 'https://vffowhyotabzigqomqrd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmZm93aHlvdGFiemlncW9tcXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5ODk5MTksImV4cCI6MjA4MzU2NTkxOX0.aFLB0DKhtJlvG5DGvSjllUkxm9NPYvW5Vp84vqFcBQY';
 
-export const supabaseFetch = async (method: 'GET' | 'POST' | 'PATCH', table: string, body?: any) => {
-  // Siempre apuntamos al ID 1 que es nuestra configuración única
-  const url = `${SUPABASE_URL}/rest/v1/${table}?id=eq.1`;
+export type SupabaseError = {
+  code: string;
+  message: string;
+  isTableMissing: boolean;
+};
+
+export const supabaseFetch = async (method: 'GET' | 'POST' | 'PATCH' | 'DELETE', table: string, body?: any, queryParams?: string) => {
+  let url = `${SUPABASE_URL}/rest/v1/${table}`;
   
   const headers: HeadersInit = {
     'apikey': SUPABASE_ANON_KEY,
@@ -13,24 +17,41 @@ export const supabaseFetch = async (method: 'GET' | 'POST' | 'PATCH', table: str
     'Prefer': 'return=representation'
   };
 
+  if (queryParams) {
+    url += `?${queryParams}`;
+  } else if ((method === 'PATCH' || method === 'DELETE') && body?.id) {
+    url += `?id=eq.${body.id}`;
+  } else if (table === 'academy_config' && method === 'GET') {
+    url += `?id=eq.1`;
+  }
+
   try {
     const response = await fetch(url, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined
+      body: body && method !== 'GET' && method !== 'DELETE' ? JSON.stringify(body) : undefined
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Supabase API Error:', errorText);
-      throw new Error(`Error ${response.status}: ${errorText}`);
+      const errorData = await response.json();
+      // Imprimimos el error como string para que el usuario pueda verlo en consola
+      console.error(`Supabase API Error [${table}]:`, JSON.stringify(errorData, null, 2));
+      
+      if (errorData.code === 'PGRST205' || response.status === 404) {
+        return { error: { code: 'PGRST205', message: 'Table missing', isTableMissing: true } };
+      }
+      return { error: errorData };
     }
     
     const data = await response.json();
-    // Supabase devuelve arrays, retornamos el primer elemento para nuestra config
-    return Array.isArray(data) ? data[0] : data;
+    if (Array.isArray(data)) {
+      if (table === 'academy_config' && method === 'GET') return data[0] || null;
+      if (method === 'PATCH' && data.length === 1) return data[0];
+      return data;
+    }
+    return data;
   } catch (error) {
-    console.error('Fetch error:', error);
+    console.error(`Fetch exception [${table}]:`, error);
     return null;
   }
 };
