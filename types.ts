@@ -29,6 +29,8 @@ export type Student = {
   nextPaymentDate: string;
   qrCode: string;
   enrollmentPayment?: number;
+  comments?: string; // Nuevo campo para observaciones
+  enrollment_fee?: number; // Para el registro de pago de inscripción
 };
 
 export type IntroSlide = {
