@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Facebook, Instagram, MapPin, Phone, Mail, Zap, ArrowUp, Lock, Music2, MessageCircle } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Phone, Mail, Zap, ArrowUp, MessageCircle, Music2 } from 'lucide-react';
 import { AcademyConfig } from '../types';
 
 interface FooterProps {
@@ -8,10 +8,10 @@ interface FooterProps {
   onAdminClick: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
+export const Footer: React.FC<FooterProps> = ({ config }) => {
   const handleWhatsAppRedirect = () => {
-    const num = config.socialWhatsapp.replace(/\D/g, '');
-    window.open(`https://wa.me/${num}?text=Hola!%20Deseo%20información%20sobre%20la%20academia.`, '_blank');
+    const num = (config.socialWhatsapp || '51900000000').replace(/\D/g, '');
+    window.open(`https://wa.me/${num}?text=Hola!%20Deseo%20información%20sobre%20la%20academia%20Athletic.`, '_blank');
   };
 
   return (
@@ -29,11 +29,11 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
               )}
               <div>
                 <span className="font-black text-xl tracking-tighter leading-none text-slate-900 uppercase">ATHLETIC</span>
-                <p className="text-[8px] tracking-[0.3em] font-bold text-emerald-600 uppercase">Élite Academy</p>
+                <p className="text-[8px] tracking-[0.3em] font-bold text-emerald-600 uppercase">Performance Academy</p>
               </div>
             </div>
             <p className="text-slate-500 text-lg leading-relaxed font-medium">
-              {config.welcomeMessage || "Formando el futuro del fútbol peruano con valores y profesionalismo."}
+              {config.welcomeMessage || "Formando a las próximas leyendas del fútbol con metodología profesional."}
             </p>
             <div className="flex gap-3">
               {config.socialFacebook && (
@@ -54,7 +54,6 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
               <button 
                 onClick={handleWhatsAppRedirect} 
                 className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-sm"
-                title="Escribir por WhatsApp"
               >
                 <MessageCircle size={22} />
               </button>
@@ -62,17 +61,17 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
           </div>
 
           <div className="lg:col-span-3">
-            <h4 className="font-black text-slate-900 mb-6 uppercase text-xs tracking-widest">Navegación</h4>
+            <h4 className="font-black text-slate-900 mb-6 uppercase text-[10px] tracking-widest">Secciones</h4>
             <ul className="space-y-4 text-slate-500 font-bold text-sm">
               <li><a href="#home" className="hover:text-blue-600 transition-colors">Inicio</a></li>
               <li><a href="#about" className="hover:text-blue-600 transition-colors">Metodología</a></li>
               <li><a href="#schedules" className="hover:text-blue-600 transition-colors">Horarios</a></li>
-              <li><a href="#register" className="hover:text-blue-600 transition-colors">Matrícula Online</a></li>
+              <li><a href="#register" className="hover:text-blue-600 transition-colors">Inscripciones</a></li>
             </ul>
           </div>
 
           <div className="lg:col-span-4">
-            <h4 className="font-black text-slate-900 mb-6 uppercase text-xs tracking-widest">Atención Directa</h4>
+            <h4 className="font-black text-slate-900 mb-6 uppercase text-[10px] tracking-widest">Contacto Directo</h4>
             <ul className="space-y-4 text-slate-500">
               <li className="flex items-start gap-3 text-sm font-bold">
                 <MapPin size={20} className="text-blue-600 shrink-0" /> {config.contactAddress}
@@ -83,28 +82,17 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
               <li className="flex items-center gap-3 text-sm font-bold">
                 <Mail size={20} className="text-blue-600 shrink-0" /> {config.contactEmail}
               </li>
-              <li className="pt-8">
-                <button 
-                  onClick={onAdminClick}
-                  className="inline-flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl active:scale-95"
-                >
-                  <Lock size={14} /> Acceso Personal
-                </button>
-              </li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col gap-1 text-center md:text-left">
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-              © 2026 Athletic Élite Academy. Todos los derechos reservados.
-            </p>
-            <p className="text-slate-300 text-[9px] font-bold uppercase tracking-widest">LIMA, PERÚ</p>
-          </div>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+            © 2026 Athletic Élite Academy. Sede Lima, Perú.
+          </p>
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all border border-slate-200 shadow-sm"
+            className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 border border-slate-200 shadow-sm"
           >
             <ArrowUp size={24} />
           </button>

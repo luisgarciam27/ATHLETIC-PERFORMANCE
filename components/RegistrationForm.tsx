@@ -71,12 +71,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
     if (!isAdminView) {
       const waNumber = (config?.socialWhatsapp || '51900000000').replace(/\D/g, '');
-      const text = `¡Hola! %0A%0AHe registrado a *${formData.firstName} ${formData.lastName}*. %0A⚽ *Grupo:* ${formData.category}%0A%0AAdjunto comprobante de reserva.`;
+      const text = `¡Hola!%20Registro%20a%20*${formData.firstName}%20${formData.lastName}*%20en%20Athletic.%0AGrupo:%20${formData.category}.%0AApoderado:%20${formData.parentName}.%0ADirección:%20${formData.address}.%0A%0AAdjunto%20comprobante%20de%20reserva.`;
       window.open(`https://wa.me/${waNumber}?text=${text}`, '_blank');
       setShowPaymentModal(false);
       setIsSuccess(true);
     } else {
-      alert('Registro guardado.');
       resetForm(true); 
     }
   };
@@ -84,6 +83,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const resetForm = (isAnotherChild = false) => {
     if (isAnotherChild) {
       setIsBrotherMode(true);
+      // Solo limpiamos los datos del NIÑO, mantenemos APODERADO y DIRECCIÓN para ahorrar tiempo
       setFormData(prev => ({
         ...prev,
         firstName: '',
@@ -118,18 +118,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   if (!isAdminView && isSuccess) {
     return (
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-[4rem] shadow-2xl p-16 text-center max-w-2xl mx-auto border border-emerald-100">
-        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8 text-emerald-500">
-          <CheckCircle2 size={48} />
-        </div>
-        <h2 className="text-4xl font-black text-slate-900 uppercase mb-4 tracking-tighter italic">¡REGISTRO EXITOSO!</h2>
-        <p className="text-slate-500 font-medium mb-10 leading-relaxed">¿Deseas matricular a un hermano/a? Tus datos de contacto se mantendrán bloqueados para tu comodidad.</p>
+        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-8 text-emerald-500"><CheckCircle2 size={48} /></div>
+        <h2 className="text-4xl font-black text-slate-900 uppercase mb-4 tracking-tighter italic">¡REGISTRO ENVIADO!</h2>
+        <p className="text-slate-500 font-medium mb-10 leading-relaxed">¿Deseas matricular a un hermano/a? Los datos de contacto se mantendrán fijos para ahorrarte tiempo.</p>
         <div className="flex flex-col gap-4">
-          <button onClick={() => resetForm(true)} className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-4 hover:bg-blue-700 transition-all active:scale-95">
-            <PlusCircle size={20}/> MATRICULAR OTRO HIJO
-          </button>
-          <button onClick={() => resetForm(false)} className="w-full py-6 bg-slate-100 text-slate-500 rounded-[2rem] font-black uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-slate-200 transition-all active:scale-95">
-            <RotateCcw size={20}/> FINALIZAR PROCESO
-          </button>
+          <button onClick={() => resetForm(true)} className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-4 hover:bg-blue-700 transition-all"><PlusCircle size={20}/> MATRICULAR HERMANO</button>
+          <button onClick={() => resetForm(false)} className="w-full py-6 bg-slate-100 text-slate-500 rounded-[2rem] font-black uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-slate-200 transition-all">TERMINAR</button>
         </div>
       </motion.div>
     );
@@ -141,46 +135,46 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         <form onSubmit={(e) => { e.preventDefault(); isAdminView ? finalizeRegistration() : setShowPaymentModal(true); }} className="space-y-12">
           {!isAdminView && (
             <div className="text-center mb-12">
-               <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4 italic">{isBrotherMode ? 'REGISTRO DE HERMANO' : 'INSCRIPCIÓN 2026'}</h2>
-               <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">PROCESO DIGITAL ATHLETIC ACADEMY</p>
+               <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4 italic">{isBrotherMode ? 'NUEVO HERMANO' : 'FICHA DE MATRÍCULA'}</h2>
+               <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.3em]">ATHLETIC PERFORMANCE ACADEMY</p>
             </div>
           )}
           <div className="grid lg:grid-cols-2 gap-12">
             <div className="space-y-8">
-              <h3 className="flex items-center gap-3 font-black text-xl text-slate-900 uppercase tracking-tighter border-b border-slate-100 pb-4"><User className="text-blue-600" size={24} /> PERFIL DEL NIÑO</h3>
+              <h3 className="flex items-center gap-3 font-black text-xl text-slate-900 uppercase tracking-tighter border-b border-slate-100 pb-4"><User className="text-blue-600" size={24} /> Datos del Niño</h3>
               <div className="grid gap-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className={labelClasses}>Nombres</label><input required name="firstName" value={formData.firstName} onChange={handleChange} className={inputClasses}/></div>
                   <div><label className={labelClasses}>Apellidos</label><input required name="lastName" value={formData.lastName} onChange={handleChange} className={inputClasses}/></div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className={labelClasses}>Nacimiento</label><input required name="birthDate" value={formData.birthDate} onChange={handleChange} type="date" className={inputClasses} /></div>
-                  <div><label className={labelClasses}>Ciclo Elegido</label>
+                  <div><label className={labelClasses}>F. Nacimiento</label><input required name="birthDate" value={formData.birthDate} onChange={handleChange} type="date" className={inputClasses} /></div>
+                  <div><label className={labelClasses}>Categoría</label>
                     <select name="scheduleId" value={formData.scheduleId} onChange={(e) => { const s = SCHEDULES.find(x => x.id === e.target.value); setFormData(prev => ({ ...prev, scheduleId: e.target.value, category: s?.category || '' })); }} className={inputClasses}>
                       {SCHEDULES.map(s => <option key={s.id} value={s.id}>{s.category} ({s.age})</option>)}
                     </select>
                   </div>
                 </div>
-                <div><label className={labelClasses}>Dirección de Residencia</label><input required disabled={isBrotherMode} name="address" value={formData.address} onChange={handleChange} className={inputClasses} placeholder="Distrito - Calle - Nro" /></div>
+                <div><label className={labelClasses}>Dirección de Residencia</label><input required disabled={isBrotherMode} name="address" value={formData.address} onChange={handleChange} className={inputClasses} /></div>
               </div>
             </div>
             <div className="space-y-8">
-              <h3 className="flex items-center gap-3 font-black text-xl text-slate-900 uppercase tracking-tighter border-b border-slate-100 pb-4"><Smartphone className="text-emerald-600" size={24}/> CONTACTO PADRES</h3>
+              <h3 className="flex items-center gap-3 font-black text-xl text-slate-900 uppercase tracking-tighter border-b border-slate-100 pb-4"><Smartphone className="text-emerald-600" size={24}/> Datos de Apoderado</h3>
               <div className="grid gap-6">
-                <div><label className={labelClasses}>Nombre del Apoderado</label><input required disabled={isBrotherMode} name="parentName" value={formData.parentName} onChange={handleChange} className={inputClasses}/></div>
-                <div><label className={labelClasses}>WhatsApp Celular</label><input required disabled={isBrotherMode} name="parentPhone" value={formData.parentPhone} onChange={handleChange} type="tel" maxLength={9} className={inputClasses} placeholder="Ej: 987654321" /></div>
+                <div><label className={labelClasses}>Nombre Completo</label><input required disabled={isBrotherMode} name="parentName" value={formData.parentName} onChange={handleChange} className={inputClasses}/></div>
+                <div><label className={labelClasses}>Celular WhatsApp</label><input required disabled={isBrotherMode} name="parentPhone" value={formData.parentPhone} onChange={handleChange} type="tel" maxLength={9} className={inputClasses} placeholder="9XXXXXXXX" /></div>
                 {isAdminView && (
                   <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 grid grid-cols-2 gap-4">
-                    <div><label className={labelClasses}>Monto Recibido S/</label><input name="total_paid" value={formData.total_paid} onChange={handleChange} type="number" className={inputClasses}/></div>
-                    <div><label className={labelClasses}>Estado Inicial</label><select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className={inputClasses}><option value="Pending">Pendiente</option><option value="Paid">Cancelado</option></select></div>
+                    <div><label className={labelClasses}>Monto Pagado S/</label><input name="total_paid" value={formData.total_paid} onChange={handleChange} type="number" className={inputClasses}/></div>
+                    <div><label className={labelClasses}>Estado Pago</label><select name="paymentStatus" value={formData.paymentStatus} onChange={handleChange} className={inputClasses}><option value="Pending">Pendiente</option><option value="Paid">Cancelado</option></select></div>
                   </div>
                 )}
               </div>
-              {isBrotherMode && <p className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-2"><CheckCircle2 size={12}/> Datos de contacto vinculados correctamente.</p>}
+              {isBrotherMode && <p className="text-[10px] font-black text-blue-600 uppercase flex items-center gap-2"><CheckCircle2 size={12}/> Datos de contacto mantenidos.</p>}
             </div>
           </div>
           <button type="submit" className="w-full py-7 bg-blue-600 text-white rounded-[2.5rem] font-black uppercase text-xs tracking-[0.2em] shadow-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-4 active:scale-95">
-            {isAdminView ? 'CONFIRMAR REGISTRO' : 'ENVIAR FICHA DE MATRÍCULA'} <Send size={20} />
+            {isAdminView ? 'CONFIRMAR MATRÍCULA' : 'FINALIZAR REGISTRO'} <Send size={20} />
           </button>
         </form>
       </motion.div>
@@ -190,23 +184,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPaymentModal(false)} className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" />
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[4rem] p-12 shadow-2xl">
-              <button onClick={() => setShowPaymentModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-rose-500 transition-colors"><X size={24}/></button>
+              <button onClick={() => setShowPaymentModal(false)} className="absolute top-8 right-8 text-slate-400"><X size={24}/></button>
               <div className="text-center mb-10">
                 <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-blue-600"><DollarSign size={32} /></div>
-                <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter italic">PAGO DE RESERVA</h3>
-                <p className="text-slate-400 font-bold uppercase text-[9px] mt-2">Inversión inicial: S/ 50.00</p>
+                <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tighter italic">RESERVA TU CUPO</h3>
+                <p className="text-slate-400 font-bold uppercase text-[9px] mt-2 italic">Monto de reserva: S/ 50.00</p>
               </div>
               <div className="space-y-4 mb-10">
                 <div className="bg-slate-50 p-6 rounded-[2rem] border flex justify-between items-center group">
-                  <div><p className="text-[9px] font-black text-blue-600 uppercase">BCP Soles</p><p className="font-black text-slate-800 text-lg">191-98765432-0-12</p></div>
-                  <button onClick={() => { navigator.clipboard.writeText('19198765432012'); alert('Nro BCP copiado'); setHasCopiedAny(true); }} className="w-12 h-12 rounded-2xl bg-white border flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Copy size={20} /></button>
+                  <div><p className="text-[9px] font-black text-blue-600 uppercase italic">BCP Soles</p><p className="font-black text-slate-800 text-lg">191-98765432-0-12</p></div>
+                  <button onClick={() => { navigator.clipboard.writeText('19198765432012'); alert('Copiado'); setHasCopiedAny(true); }} className="w-12 h-12 rounded-2xl bg-white border flex items-center justify-center text-blue-600 shadow-sm"><Copy size={20} /></button>
                 </div>
                 <div className="bg-emerald-50 p-6 rounded-[2rem] border flex justify-between items-center group">
-                  <div><p className="text-[9px] font-black text-emerald-600 uppercase">Yape / Plin</p><p className="font-black text-emerald-800 text-lg">900 000 000</p></div>
-                  <button onClick={() => { navigator.clipboard.writeText('900000000'); alert('Nro Yape copiado'); setHasCopiedAny(true); }} className="w-12 h-12 rounded-2xl bg-white border flex items-center justify-center text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"><Copy size={20} /></button>
+                  <div><p className="text-[9px] font-black text-emerald-600 uppercase italic">Yape / Plin</p><p className="font-black text-emerald-800 text-lg">900 000 000</p></div>
+                  <button onClick={() => { navigator.clipboard.writeText('900000000'); alert('Copiado'); setHasCopiedAny(true); }} className="w-12 h-12 rounded-2xl bg-white border flex items-center justify-center text-emerald-600 shadow-sm"><Copy size={20} /></button>
                 </div>
               </div>
-              <button disabled={!hasCopiedAny} onClick={finalizeRegistration} className={`w-full py-7 rounded-[2.5rem] font-black text-sm uppercase tracking-widest transition-all shadow-xl ${hasCopiedAny ? 'bg-slate-900 text-white hover:bg-blue-600' : 'bg-slate-100 text-slate-300 cursor-not-allowed'}`}>CONFIRMAR ENVÍO</button>
+              <button disabled={!hasCopiedAny} onClick={finalizeRegistration} className={`w-full py-7 rounded-[2.5rem] font-black text-sm uppercase tracking-widest transition-all ${hasCopiedAny ? 'bg-slate-900 text-white shadow-2xl hover:bg-blue-600' : 'bg-slate-100 text-slate-300'}`}>CONFIRMAR ENVÍO</button>
             </motion.div>
           </div>
         )}

@@ -12,7 +12,7 @@ const staffStories = [
   {
     id: 's1',
     type: 'video' as const,
-    url: 'https://cdn.pixabay.com/video/2021/04/12/70860-537442186_large.mp4', // Ejemplo: Video de entrenamiento
+    url: 'https://cdn.pixabay.com/video/2021/04/12/70860-537442186_large.mp4',
     name: 'Prof. Carlos Ruíz',
     role: 'Director Técnico - Licencia PRO',
     duration: 10000
@@ -24,32 +24,19 @@ const staffStories = [
     name: 'Coach Martha Solano',
     role: 'Especialista en Psicomotricidad',
     duration: 5000
-  },
-  {
-    id: 's3',
-    type: 'video' as const,
-    url: 'https://cdn.pixabay.com/video/2020/07/21/45089-441617300_large.mp4', // Ejemplo: Video táctico
-    name: 'Técnico Jorge Paz',
-    role: 'Preparador de Arqueros',
-    duration: 8000
   }
 ];
 
 const sliderContent = [
   {
-    tag: "ESTÁNDAR DE ALTO RENDIMIENTO - LIMA",
+    tag: "ALTO RENDIMIENTO - LIMA 2026",
     title: "FORJANDO LOS LÍDERES DEL MAÑANA",
     desc: "Nuestra metodología integra el talento natural con disciplina táctica y apoyo emocional. Únete a la academia donde el éxito es una consecuencia de la formación integral.",
   },
   {
-    tag: "INSCRIPCIONES ABIERTAS 2024",
+    tag: "INSCRIPCIONES ABIERTAS",
     title: "MÁS QUE FÚTBOL, UNA PASIÓN",
     desc: "Desarrolla habilidades competitivas en un ambiente profesional con los mejores entrenadores licenciados. Cupos limitados por categoría.",
-  },
-  {
-    tag: "ELITE TRAINING CENTER",
-    title: "ENTRENA COMO UN PROFESIONAL",
-    desc: "Tecnología y metodología aplicada al fútbol base. Seguimiento individualizado del progreso de cada atleta mediante nuestro sistema digital.",
   }
 ];
 
@@ -72,14 +59,12 @@ export const Hero: React.FC<HeroProps> = ({ images }) => {
 
   return (
     <div className="relative min-h-[95vh] flex items-center bg-slate-50 overflow-hidden pt-20">
-      {/* Fondo Estático */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/4 right-[10%] w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[120px]"></div>
         <div className="absolute bottom-[-10%] left-[5%] w-[400px] h-[400px] bg-emerald-300/15 rounded-full blur-[100px]"></div>
       </div>
 
       <div className="container mx-auto px-4 z-10 grid lg:grid-cols-12 gap-12 items-center">
-        {/* Columna Izquierda: Texto */}
         <div className="lg:col-span-6 min-h-[450px] flex flex-col justify-center">
           <div className="relative overflow-hidden h-[300px] md:h-auto">
             <AnimatePresence mode="wait">
@@ -131,7 +116,6 @@ export const Hero: React.FC<HeroProps> = ({ images }) => {
           </div>
         </div>
 
-        {/* Columna Derecha: Imagen Deslizante */}
         <div className="lg:col-span-6 relative h-[400px] md:h-[600px] flex items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -153,7 +137,7 @@ export const Hero: React.FC<HeroProps> = ({ images }) => {
                  
                  <div className="absolute inset-x-8 bottom-8 flex justify-between items-center bg-white/10 backdrop-blur-xl p-6 rounded-[2.5rem] border border-white/20 shadow-2xl">
                     <div className="hidden sm:block">
-                      <p className="text-white font-black text-[10px] uppercase tracking-widest mb-1 opacity-80">ESTÁNDAR FIFA</p>
+                      <p className="text-white font-black text-[10px] uppercase tracking-widest mb-1 opacity-80">ESTÁNDAR PROFESIONAL</p>
                       <p className="text-white font-bold text-xl leading-none uppercase">Formación Élite</p>
                     </div>
                     <div className="flex gap-3 ml-auto">
@@ -171,7 +155,6 @@ export const Hero: React.FC<HeroProps> = ({ images }) => {
         </div>
       </div>
 
-      {/* Story Viewer Modal */}
       <StoryViewer 
         isOpen={showStories} 
         onClose={() => setShowStories(false)} 
