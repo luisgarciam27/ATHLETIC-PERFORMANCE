@@ -8,21 +8,7 @@ export type ClassSchedule = {
   duration: string;
   price: number;
   objective: string;
-};
-
-export type AttendanceStatus = 'present' | 'absent' | 'late';
-
-export type AttendanceRecord = {
-  date: string;
-  status: AttendanceStatus;
-};
-
-export type PaymentRecord = {
-  id: string;
-  date: string;
-  amount: number;
-  method: 'Yape' | 'Plin' | 'Transferencia' | 'Efectivo';
-  status: 'verified' | 'pending';
+  color: string;
 };
 
 export type Student = {
@@ -35,14 +21,12 @@ export type Student = {
   modality: string;
   parentName: string;
   parentPhone: string;
-  parentEmail: string;
   address: string;
   scheduleId: string;
   paymentStatus: 'Paid' | 'Pending' | 'Overdue';
   nextPaymentDate: string;
   qrCode: string;
-  attendanceHistory?: AttendanceRecord[];
-  paymentHistory?: PaymentRecord[];
+  enrollmentPayment?: number;
 };
 
 export type IntroSlide = {
@@ -54,17 +38,20 @@ export type IntroSlide = {
   duration: number;
 };
 
+export type StaffStory = {
+  id: string;
+  name: string;
+  role: string;
+  url: string;
+  type: 'image' | 'video';
+  duration: number;
+};
+
 export type AcademyConfig = {
   logoUrl: string;
   heroImages: string[];
   aboutImages: string[];
   welcomeMessage: string;
   introSlides: IntroSlide[];
+  staffStories?: StaffStory[];
 };
-
-export type Message = {
-  id: string;
-  sender: string;
-  content: string;
-  timestamp: string;
-}

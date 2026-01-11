@@ -5,7 +5,6 @@ export const ACADEMY_LOGO = "https://raw.githubusercontent.com/frapastor/assets/
 export const WHATSAPP_NUMBER = "51900000000";
 
 export const SCHEDULES: ClassSchedule[] = [
-  // LUNES, MIÉRCOLES Y VIERNES
   {
     id: 'baby-futbol',
     category: 'Baby Fútbol',
@@ -14,7 +13,8 @@ export const SCHEDULES: ClassSchedule[] = [
     time: '4:00 PM – 5:00 PM',
     duration: '60 min',
     price: 180,
-    objective: 'Primeros pasos: desarrollo psicomotor y adaptación al balón. Dirigido por Bachiller en Ed. Física (U. del Callao) + Asistente.'
+    objective: 'Primeros pasos: desarrollo psicomotor y adaptación al balón.',
+    color: '#3b82f6' // Blue
   },
   {
     id: 'formativo-lmv',
@@ -24,7 +24,8 @@ export const SCHEDULES: ClassSchedule[] = [
     time: '4:00 PM – 5:30 PM',
     duration: '90 min',
     price: 200,
-    objective: 'Nivel principiantes: fundamentos técnicos y calidad de servicio con profesor principal + asistente en campo.'
+    objective: 'Nivel principiantes: fundamentos técnicos y calidad de servicio.',
+    color: '#10b981' // Emerald
   },
   {
     id: 'competitivo-lmv',
@@ -34,7 +35,8 @@ export const SCHEDULES: ClassSchedule[] = [
     time: '5:30 PM – 7:00 PM',
     duration: '90 min',
     price: 220,
-    objective: 'Desarrollo técnico–táctico avanzado y preparación para torneos competitivos.'
+    objective: 'Desarrollo técnico–táctico avanzado y preparación para torneos.',
+    color: '#f59e0b' // Amber
   },
   {
     id: 'alto-rendimiento-lmv',
@@ -44,9 +46,9 @@ export const SCHEDULES: ClassSchedule[] = [
     time: '7:00 PM – 8:00 PM',
     duration: '60 min',
     price: 250,
-    objective: 'Preparación física de alta exigencia y especialización táctica para futbolistas de proyección.'
+    objective: 'Preparación física de alta exigencia y especialización táctica.',
+    color: '#f43f5e' // Rose
   },
-  // MARTES, JUEVES Y SÁBADOS
   {
     id: 'formativo-competitivo-mjs',
     category: 'Formativo–Competitivo',
@@ -55,7 +57,8 @@ export const SCHEDULES: ClassSchedule[] = [
     time: '4:00 PM – 5:30 PM',
     duration: '90 min',
     price: 220,
-    objective: 'Transición a competencia real, fundamentos tácticos y adaptación a Fútbol 9/11.'
+    objective: 'Transición a competencia real y fundamentos tácticos.',
+    color: '#8b5cf6' // Purple
   },
   {
     id: 'formativo-competitivo-avanzado-mjs',
@@ -65,7 +68,8 @@ export const SCHEDULES: ClassSchedule[] = [
     time: '5:30 PM – 7:00 PM',
     duration: '90 min',
     price: 240,
-    objective: 'Alto nivel técnico, desarrollo físico específico y competencia de alto rendimiento.'
+    objective: 'Alto nivel técnico y competencia de alto rendimiento.',
+    color: '#f97316' // Orange
   }
 ];
 
