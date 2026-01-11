@@ -15,7 +15,7 @@ interface AboutProps {
 }
 
 export const About: React.FC<AboutProps> = ({ images }) => {
-  // Aseguramos fallback si no hay imágenes configuradas
+  // Aseguramos fallback si no hay imágenes configuradas o el array es corto
   const displayImages = images && images.length >= 4 ? images : [
     "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?q=80&w=800",
     "https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=800",

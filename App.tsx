@@ -13,6 +13,7 @@ import { Student, AcademyConfig, IntroSlide, ClassSchedule, StaffStory } from '.
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabaseFetch } from './lib/supabase';
 import { SCHEDULES as STATIC_SCHEDULES } from './constants';
+import { Lock, Zap } from 'lucide-react';
 
 const DEFAULT_INTRO: IntroSlide[] = [
   { id: 'intro-1', type: 'video', url: 'https://cdn.pixabay.com/video/2021/04/12/70860-537442186_large.mp4', title: 'EL COMIENZO', subtitle: 'DE UNA LEYENDA', duration: 6000 }
@@ -24,14 +25,19 @@ const DEFAULT_STAFF: StaffStory[] = [
 
 const DEFAULT_CONFIG: AcademyConfig = {
   logoUrl: "https://raw.githubusercontent.com/frapastor/assets/main/athletic_logo.png",
-  heroImages: ["https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=2070&auto=format&fit=crop"],
-  aboutImages: ["https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?q=80&w=800"],
+  heroImages: ["https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=2070"],
+  aboutImages: [
+    "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?q=80&w=800",
+    "https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=800",
+    "https://images.unsplash.com/photo-1526232386154-75127e4dd0a8?q=80&w=800",
+    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800"
+  ],
   welcomeMessage: "Inscripciones abiertas 2026. Únete a la familia Athletic Performance.",
   introSlides: DEFAULT_INTRO,
   staffStories: DEFAULT_STAFF,
   contactPhone: "+51 900 000 000",
   contactEmail: "hola@athletic.pe",
-  contactAddress: "Av. Javier Prado, Lima",
+  contactAddress: "Sede Principal, Lima",
   socialFacebook: "", socialInstagram: "", socialTiktok: "", socialWhatsapp: "51900000000"
 };
 
@@ -40,7 +46,7 @@ const App: React.FC = () => {
   const [schedules, setSchedules] = useState<ClassSchedule[]>(STATIC_SCHEDULES);
   const [config, setConfig] = useState<AcademyConfig>(DEFAULT_CONFIG);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
-  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [showLoginPortal, setShowLoginPortal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showIntro, setShowIntro] = useState(true);
 
@@ -90,7 +96,8 @@ const App: React.FC = () => {
         setIsAdminLoggedIn(true);
         setShowIntro(false);
       } else if (window.location.hash === '#admin') {
-        setShowLoginModal(true);
+        setShowLoginPortal(true);
+        setShowIntro(false);
       }
     };
 
@@ -134,7 +141,7 @@ const App: React.FC = () => {
       total_paid: student.total_paid, parent_phone: student.parentPhone,
       parent_name: student.parentName, comments: student.comments,
       modality: student.modality, address: student.address,
-      schedule_id: student.scheduleId // Asegurar que el ciclo se actualiza
+      schedule_id: student.scheduleId
     });
     if (result && !result.error) { await fetchData(); return true; }
     return false;
@@ -147,8 +154,6 @@ const App: React.FC = () => {
     if (result !== null && !result?.error) {
       setStudents(prev => prev.filter(s => s.id !== id));
       alert('Eliminado con éxito.');
-    } else {
-      alert('Error al eliminar.');
     }
   };
 
@@ -168,30 +173,40 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = () => {
     setIsAdminLoggedIn(true);
+    setShowLoginPortal(false);
     localStorage.setItem('athletic_admin_auth', 'true');
-    setShowIntro(false);
     return true;
   };
 
-  const handleLogout = () => {
-    setIsAdminLoggedIn(false);
-    localStorage.removeItem('athletic_admin_auth');
-    window.location.hash = '';
-    window.location.reload();
-  };
+  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black uppercase text-xs tracking-widest animate-pulse">Cargando Sistema Athletic Academy...</div>;
 
-  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black uppercase text-xs tracking-[0.3em] animate-pulse">Iniciando Athletic Academy...</div>;
+  // RENDERIZADO DEL PORTAL DE LOGIN INDEPENDIENTE
+  if (showLoginPortal && !isAdminLoggedIn) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600 rounded-full blur-[150px]"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-600 rounded-full blur-[150px]"></div>
+        </div>
+        <LoginModal 
+          isOpen={true} 
+          onClose={() => { window.location.hash = ''; setShowLoginPortal(false); }} 
+          onLogin={(p) => p === 'admin123' ? handleLoginSuccess() : false} 
+        />
+      </div>
+    );
+  }
 
   return (
     <>
-      <AnimatePresence>{showIntro && <IntroPortal key="intro" onComplete={() => setShowIntro(false)} slides={config.introSlides} />}</AnimatePresence>
-      <motion.div className="min-h-screen" animate={{ opacity: showIntro ? 0 : 1 }}>
+      <AnimatePresence>{showIntro && !isAdminLoggedIn && !showLoginPortal && <IntroPortal key="intro" onComplete={() => setShowIntro(false)} slides={config.introSlides} />}</AnimatePresence>
+      <motion.div className="min-h-screen" animate={{ opacity: (showIntro && !isAdminLoggedIn) ? 0 : 1 }}>
         {isAdminLoggedIn ? (
           <AdminDashboard 
             students={students} schedules={schedules} config={config} 
             onUpdateConfig={handleUpdateConfig} onUpdateSchedules={handleUpdateSchedules}
             onRegister={handleRegister} onUpdateStudent={handleUpdateStudent} 
-            onDelete={handleDeleteStudent} onLogout={handleLogout} 
+            onDelete={handleDeleteStudent} onLogout={() => { setIsAdminLoggedIn(false); localStorage.removeItem('athletic_admin_auth'); window.location.hash = ''; window.location.reload(); }} 
           />
         ) : (
           <>
@@ -200,8 +215,7 @@ const App: React.FC = () => {
             <About images={config.aboutImages} />
             <SchedulesSection schedules={schedules} />
             <section id="register" className="py-24 bg-slate-100"><RegistrationForm config={config} onRegister={handleRegister} /></section>
-            <Footer config={config} onAdminClick={() => setShowLoginModal(true)} />
-            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => p === 'admin123' ? handleLoginSuccess() : false} />
+            <Footer config={config} onAdminClick={() => { window.location.hash = '#admin'; setShowLoginPortal(true); }} />
           </>
         )}
       </motion.div>
