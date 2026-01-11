@@ -9,10 +9,10 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { LoginModal } from './components/LoginModal';
 import { Footer } from './components/Footer';
 import { IntroPortal } from './components/IntroPortal';
-import { Student, AcademyConfig, IntroSlide } from './types';
+import { Student, AcademyConfig, IntroSlide, ClassSchedule, StaffStory } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabaseFetch } from './lib/supabase';
-import { Database, Copy, Check, RefreshCw } from 'lucide-react';
+import { SCHEDULES as STATIC_SCHEDULES } from './constants';
 
 const DEFAULT_INTRO: IntroSlide[] = [
   {
@@ -22,6 +22,17 @@ const DEFAULT_INTRO: IntroSlide[] = [
     title: 'EL COMIENZO',
     subtitle: 'DE UNA LEYENDA',
     duration: 6000
+  }
+];
+
+const DEFAULT_STAFF: StaffStory[] = [
+  {
+    id: 's1',
+    type: 'video',
+    url: 'https://cdn.pixabay.com/video/2021/04/12/70860-537442186_large.mp4',
+    name: 'Prof. Carlos Ruíz',
+    role: 'Director Técnico',
+    duration: 10000
   }
 ];
 
@@ -36,44 +47,70 @@ const DEFAULT_CONFIG: AcademyConfig = {
     "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=800"
   ],
   welcomeMessage: "Inscripciones abiertas 2024. Únete a la familia Athletic Performance.",
-  introSlides: DEFAULT_INTRO
+  introSlides: DEFAULT_INTRO,
+  staffStories: DEFAULT_STAFF,
+  contactPhone: "+51 900 000 000",
+  contactEmail: "hola@athletic.pe",
+  contactAddress: "Av. Javier Prado, Lima",
+  socialFacebook: "https://facebook.com/athletic",
+  socialInstagram: "https://instagram.com/athletic",
+  socialTiktok: "https://tiktok.com/@athletic",
+  socialWhatsapp: "51900000000"
 };
 
 const App: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
+  const [schedules, setSchedules] = useState<ClassSchedule[]>(STATIC_SCHEDULES);
   const [config, setConfig] = useState<AcademyConfig>(DEFAULT_CONFIG);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showIntro, setShowIntro] = useState(true);
 
-  const fetchStudents = async () => {
-    const data: any = await supabaseFetch('GET', 'students');
-    if (data && Array.isArray(data)) {
-      setStudents(data.map(s => ({
+  const fetchData = async () => {
+    // 1. Alumnos
+    const studentsRes: any = await supabaseFetch('GET', 'students');
+    if (studentsRes && Array.isArray(studentsRes)) {
+      setStudents(studentsRes.map(s => ({
         ...s,
-        firstName: s.first_name || '',
-        lastName: s.last_name || '',
-        birthDate: s.birth_date || '',
-        parentName: s.parent_name || '',
-        parentPhone: s.parent_phone || '',
-        paymentStatus: s.payment_status || 'Pending',
-        nextPaymentDate: s.next_payment_date || '',
-        qrCode: s.qr_code || '',
-        enrollmentPayment: 50 // Fixed value as the column is missing in DB
+        firstName: s.first_name,
+        lastName: s.last_name,
+        birthDate: s.birth_date,
+        parentName: s.parent_name,
+        parentPhone: s.parent_phone,
+        paymentStatus: s.payment_status,
+        nextPaymentDate: s.next_payment_date,
+        qrCode: s.qr_code
       })));
     }
-  };
 
-  const fetchConfig = async () => {
+    // 2. Horarios
+    const schedulesRes: any = await supabaseFetch('GET', 'schedules');
+    if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
+      setSchedules(schedulesRes.map(s => ({
+        ...s,
+        startDate: s.start_date,
+        endDate: s.end_date
+      })));
+    }
+
+    // 3. Configuración
     const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
     if (cloudConfig && !cloudConfig.error) {
       setConfig({
         logoUrl: cloudConfig.logo_url || DEFAULT_CONFIG.logoUrl,
-        heroImages: cloudConfig.hero_images || DEFAULT_CONFIG.heroImages,
-        aboutImages: cloudConfig.about_images || DEFAULT_CONFIG.aboutImages,
+        heroImages: (cloudConfig.hero_images?.length > 0) ? cloudConfig.hero_images : DEFAULT_CONFIG.heroImages,
+        aboutImages: (cloudConfig.about_images?.length > 0) ? cloudConfig.about_images : DEFAULT_CONFIG.aboutImages,
         welcomeMessage: cloudConfig.welcome_message || DEFAULT_CONFIG.welcomeMessage,
-        introSlides: cloudConfig.intro_slides || DEFAULT_CONFIG.introSlides
+        introSlides: (cloudConfig.intro_slides?.length > 0) ? cloudConfig.intro_slides : DEFAULT_CONFIG.introSlides,
+        staffStories: (cloudConfig.staff_stories?.length > 0) ? cloudConfig.staff_stories : DEFAULT_CONFIG.staffStories,
+        contactPhone: cloudConfig.contact_phone || DEFAULT_CONFIG.contactPhone,
+        contactEmail: cloudConfig.contact_email || DEFAULT_CONFIG.contactEmail,
+        contactAddress: cloudConfig.contact_address || DEFAULT_CONFIG.contactAddress,
+        socialFacebook: cloudConfig.social_facebook || DEFAULT_CONFIG.socialFacebook,
+        socialInstagram: cloudConfig.social_instagram || DEFAULT_CONFIG.socialInstagram,
+        socialTiktok: cloudConfig.social_tiktok || DEFAULT_CONFIG.socialTiktok,
+        socialWhatsapp: cloudConfig.social_whatsapp || DEFAULT_CONFIG.socialWhatsapp
       });
     }
   };
@@ -81,9 +118,9 @@ const App: React.FC = () => {
   useEffect(() => {
     const initApp = async () => {
       try {
-        await Promise.all([fetchStudents(), fetchConfig()]);
+        await fetchData();
       } catch (err) {
-        console.error("Initialization failed:", err);
+        console.error("Error inicializando:", err);
       } finally {
         const auth = sessionStorage.getItem('athletic_auth');
         if (auth === 'true') {
@@ -96,6 +133,24 @@ const App: React.FC = () => {
     initApp();
   }, []);
 
+  const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {
+    setSchedules(newSchedules);
+    for (const s of newSchedules) {
+      await supabaseFetch('POST', 'schedules', {
+        id: s.id,
+        category: s.category,
+        age: s.age,
+        days: s.days,
+        time: s.time,
+        price: s.price,
+        color: s.color,
+        start_date: s.startDate,
+        end_date: s.endDate
+      });
+    }
+    return true;
+  };
+
   async function handleRegister(newStudent: Student) {
     const payload = {
       first_name: newStudent.firstName,
@@ -106,46 +161,39 @@ const App: React.FC = () => {
       parent_name: newStudent.parentName,
       parent_phone: newStudent.parentPhone,
       address: newStudent.address,
-      payment_status: 'Pending',
+      payment_status: newStudent.paymentStatus || 'Pending',
       next_payment_date: newStudent.nextPaymentDate,
       qr_code: newStudent.qrCode
-      // Removed enrollment_payment to fix PGRST204
     };
 
     const result = await supabaseFetch('POST', 'students', payload);
     if (result && !result.error) {
-      await fetchStudents();
+      await fetchData();
       return true;
     }
     return false;
   }
 
   async function handleUpdateStudent(student: Student) {
-    const payload = {
+    const result = await supabaseFetch('PATCH', 'students', {
       id: student.id,
       first_name: student.firstName,
       last_name: student.lastName,
-      birth_date: student.birthDate,
-      category: student.category,
-      parent_name: student.parentName,
-      parent_phone: student.parentPhone,
       payment_status: student.paymentStatus,
       next_payment_date: student.nextPaymentDate,
-      address: student.address
-    };
-
-    const result = await supabaseFetch('PATCH', 'students', payload);
+      parent_phone: student.parentPhone
+    });
     if (result && !result.error) {
-      await fetchStudents();
+      await fetchData();
       return true;
     }
     return false;
   }
 
   async function handleDeleteStudent(id: string) {
-    if (window.confirm('¿Eliminar alumno permanentemente?')) {
+    if (window.confirm('¿Eliminar registro?')) {
       const result = await supabaseFetch('DELETE', 'students', { id });
-      if (result !== null && !result.error) await fetchStudents();
+      if (result !== null && !result.error) await fetchData();
     }
   }
 
@@ -156,7 +204,15 @@ const App: React.FC = () => {
       hero_images: newConfig.heroImages,
       about_images: newConfig.aboutImages,
       welcome_message: newConfig.welcomeMessage,
-      intro_slides: newConfig.introSlides
+      intro_slides: newConfig.introSlides,
+      staff_stories: newConfig.staffStories,
+      contact_phone: newConfig.contactPhone,
+      contact_email: newConfig.contactEmail,
+      contact_address: newConfig.contactAddress,
+      social_facebook: newConfig.socialFacebook,
+      social_instagram: newConfig.socialInstagram,
+      social_tiktok: newConfig.socialTiktok,
+      social_whatsapp: newConfig.socialWhatsapp
     });
     if (result && !result.error) {
       setConfig(newConfig);
@@ -165,7 +221,12 @@ const App: React.FC = () => {
     return false;
   }
 
-  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900"><div className="w-12 h-12 bg-blue-600 rounded-xl animate-spin" /></div>;
+  if (isLoading) return (
+    <div className="h-screen flex flex-col items-center justify-center bg-slate-900 gap-4">
+      <div className="w-16 h-16 bg-blue-600 rounded-2xl animate-spin" />
+      <p className="text-white font-black text-xs uppercase tracking-[0.5em] animate-pulse">Cargando Academia</p>
+    </div>
+  );
 
   return (
     <>
@@ -174,8 +235,10 @@ const App: React.FC = () => {
         {isAdminLoggedIn ? (
           <AdminDashboard 
             students={students} 
+            schedules={schedules}
             config={config} 
             onUpdateConfig={handleUpdateConfig} 
+            onUpdateSchedules={handleUpdateSchedules}
             onRegister={handleRegister} 
             onUpdateStudent={handleUpdateStudent} 
             onDelete={handleDeleteStudent} 
@@ -186,9 +249,9 @@ const App: React.FC = () => {
             <Navbar logoUrl={config.logoUrl} onTabChange={() => {}} />
             <Hero images={config.heroImages} />
             <About images={config.aboutImages} />
-            <SchedulesSection />
+            <SchedulesSection schedules={schedules} />
             <section id="register" className="py-24 bg-slate-100"><RegistrationForm onRegister={handleRegister} /></section>
-            <Footer logoUrl={config.logoUrl} onAdminClick={() => setShowLoginModal(true)} />
+            <Footer config={config} onAdminClick={() => setShowLoginModal(true)} />
             <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => { if(p==='admin123'){ setIsAdminLoggedIn(true); sessionStorage.setItem('athletic_auth','true'); return true; } return false; }} />
           </>
         )}

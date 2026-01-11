@@ -9,6 +9,8 @@ export type ClassSchedule = {
   price: number;
   objective: string;
   color: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 export type Student = {
@@ -53,5 +55,13 @@ export type AcademyConfig = {
   aboutImages: string[];
   welcomeMessage: string;
   introSlides: IntroSlide[];
-  staffStories?: StaffStory[];
+  staffStories: StaffStory[];
+  // Contact & Social
+  contactPhone: string;
+  contactEmail: string;
+  contactAddress: string;
+  socialFacebook: string;
+  socialInstagram: string;
+  socialTiktok: string;
+  socialWhatsapp: string;
 };

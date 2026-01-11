@@ -1,3 +1,4 @@
+
 const SUPABASE_URL = 'https://vffowhyotabzigqomqrd.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmZm93aHlvdGFiemlncW9tcXJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5ODk5MTksImV4cCI6MjA4MzU2NTkxOX0.aFLB0DKhtJlvG5DGvSjllUkxm9NPYvW5Vp84vqFcBQY';
 
@@ -34,9 +35,9 @@ export const supabaseFetch = async (method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
     
     if (!response.ok) {
       const errorData = await response.json();
-      // Imprimimos el error como string para que el usuario pueda verlo en consola
-      console.error(`Supabase API Error [${table}]:`, JSON.stringify(errorData, null, 2));
+      console.warn(`Supabase API Notice [${table}]:`, errorData.message);
       
+      // PGRST205 significa que la tabla no existe en la base de datos
       if (errorData.code === 'PGRST205' || response.status === 404) {
         return { error: { code: 'PGRST205', message: 'Table missing', isTableMissing: true } };
       }
@@ -52,6 +53,6 @@ export const supabaseFetch = async (method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
     return data;
   } catch (error) {
     console.error(`Fetch exception [${table}]:`, error);
-    return null;
+    return { error: { message: 'Network error or table missing' } };
   }
 };
