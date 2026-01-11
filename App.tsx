@@ -45,7 +45,6 @@ const App: React.FC = () => {
   const [showIntro, setShowIntro] = useState(true);
 
   const fetchData = async () => {
-    // 1. Obtener Alumnos
     const studentsRes: any = await supabaseFetch('GET', 'students');
     if (studentsRes && Array.isArray(studentsRes)) {
       setStudents(studentsRes.map(s => ({
@@ -58,13 +57,11 @@ const App: React.FC = () => {
       })));
     }
 
-    // 2. Obtener Horarios
     const schedulesRes: any = await supabaseFetch('GET', 'schedules');
     if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
       setSchedules(schedulesRes.map(s => ({ ...s, days: Array.isArray(s.days) ? s.days : [] })));
     }
 
-    // 3. Obtener Configuración
     const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
     if (cloudConfig && !cloudConfig.error) {
       setConfig({
@@ -122,31 +119,38 @@ const App: React.FC = () => {
       payment_status: student.paymentStatus, pending_balance: student.pending_balance,
       total_paid: student.total_paid, parent_phone: student.parentPhone,
       parent_name: student.parentName, comments: student.comments,
-      modality: student.modality
+      modality: student.modality, address: student.address
     });
     if (result && !result.error) { await fetchData(); return true; }
     return false;
   };
 
   const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm('¿Deseas eliminar permanentemente a este alumno? Se borrará todo su historial de pagos.')) return;
+    if (!window.confirm('¿ESTÁS SEGURO? Se eliminará al alumno y TODO su historial de pagos permanentemente.')) return;
     
     try {
-      // 1. Limpiar pagos asociados usando queryParams para filtro directo
+      // 1. Limpieza forzada de pagos relacionados (en caso de que falle la cascada SQL)
       await supabaseFetch('DELETE', 'payments', null, `student_id=eq.${id}`);
       
-      // 2. Eliminar al alumno
+      // 2. Borrar alumno
       const result = await supabaseFetch('DELETE', 'students', { id });
       
-      if (result !== null && !result.error) {
+      if (result !== null && !result?.error) {
         setStudents(prev => prev.filter(s => s.id !== id));
-        alert('Alumno y pagos eliminados con éxito.');
+        alert('Eliminado con éxito.');
       } else {
-        alert('Error al intentar eliminar de la base de datos.');
+        // Segundo intento con filtro directo
+        const retry = await supabaseFetch('DELETE', 'students', null, `id=eq.${id}`);
+        if (retry !== null && !retry?.error) {
+           setStudents(prev => prev.filter(s => s.id !== id));
+           alert('Eliminado con éxito (bypass).');
+        } else {
+          alert('Error de base de datos. Verifique los tipos de ID (UUID vs TEXT) en Supabase.');
+        }
       }
-    } catch (err) {
-      console.error("Error en eliminación:", err);
-      alert('Ocurrió un error inesperado al eliminar.');
+    } catch (e) {
+      console.error(e);
+      alert('Error crítico de red.');
     }
   };
 
@@ -164,7 +168,7 @@ const App: React.FC = () => {
     return false;
   };
 
-  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black text-xs tracking-widest uppercase animate-pulse">Cargando Athletic Performance...</div>;
+  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black uppercase text-xs tracking-[0.3em] animate-pulse">Iniciando Athletic Academy...</div>;
 
   return (
     <>
@@ -193,4 +197,5 @@ const App: React.FC = () => {
   );
 };
 
+// Fix for index.tsx: Module '"file:///App"' has no default export.
 export default App;
