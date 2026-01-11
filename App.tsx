@@ -53,7 +53,8 @@ const App: React.FC = () => {
         parentName: s.parent_name, parentPhone: s.parent_phone,
         paymentStatus: s.payment_status, qrCode: s.qr_code,
         pending_balance: s.pending_balance || 0, total_paid: s.total_paid || 0,
-        comments: s.comments, scheduleId: s.schedule_id, modality: s.modality
+        comments: s.comments, scheduleId: s.schedule_id, modality: s.modality || 'Mensual Regular',
+        registrationDate: s.registration_date || s.created_at || new Date().toISOString()
       })));
     }
 
@@ -83,12 +84,26 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    const handleHashCheck = () => {
+      if (window.location.hash === '#admin' && !isAdminLoggedIn) {
+        setShowLoginModal(true);
+      }
+    };
+
     fetchData().finally(() => {
-      const auth = sessionStorage.getItem('athletic_auth');
-      if (auth === 'true') { setIsAdminLoggedIn(true); setShowIntro(false); }
+      // Cambio a localStorage para persistencia al refrescar
+      const auth = localStorage.getItem('athletic_auth');
+      if (auth === 'true') { 
+        setIsAdminLoggedIn(true); 
+        setShowIntro(false); 
+      }
+      handleHashCheck();
       setIsLoading(false);
     });
-  }, []);
+
+    window.addEventListener('hashchange', handleHashCheck);
+    return () => window.removeEventListener('hashchange', handleHashCheck);
+  }, [isAdminLoggedIn]);
 
   const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {
     setSchedules(newSchedules);
@@ -106,7 +121,8 @@ const App: React.FC = () => {
       total_paid: newStudent.total_paid || 0, comments: newStudent.comments || "",
       payment_status: newStudent.paymentStatus, qr_code: newStudent.qrCode,
       modality: newStudent.modality, birth_date: newStudent.birthDate,
-      address: newStudent.address, schedule_id: newStudent.scheduleId
+      address: newStudent.address, schedule_id: newStudent.scheduleId,
+      registration_date: new Date().toISOString()
     };
     const result = await supabaseFetch('POST', 'students', payload);
     if (result && !result.error) { await fetchData(); return true; }
@@ -126,31 +142,14 @@ const App: React.FC = () => {
   };
 
   const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm('¿ESTÁS SEGURO? Se eliminará al alumno y TODO su historial de pagos permanentemente.')) return;
-    
-    try {
-      // 1. Limpieza forzada de pagos relacionados (en caso de que falle la cascada SQL)
-      await supabaseFetch('DELETE', 'payments', null, `student_id=eq.${id}`);
-      
-      // 2. Borrar alumno
-      const result = await supabaseFetch('DELETE', 'students', { id });
-      
-      if (result !== null && !result?.error) {
-        setStudents(prev => prev.filter(s => s.id !== id));
-        alert('Eliminado con éxito.');
-      } else {
-        // Segundo intento con filtro directo
-        const retry = await supabaseFetch('DELETE', 'students', null, `id=eq.${id}`);
-        if (retry !== null && !retry?.error) {
-           setStudents(prev => prev.filter(s => s.id !== id));
-           alert('Eliminado con éxito (bypass).');
-        } else {
-          alert('Error de base de datos. Verifique los tipos de ID (UUID vs TEXT) en Supabase.');
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      alert('Error crítico de red.');
+    if (!window.confirm('¿ELIMINAR ALUMNO? Esta acción borrará también sus pagos.')) return;
+    await supabaseFetch('DELETE', 'payments', null, `student_id=eq.${id}`);
+    const result = await supabaseFetch('DELETE', 'students', { id });
+    if (result !== null && !result?.error) {
+      setStudents(prev => prev.filter(s => s.id !== id));
+      alert('Eliminado con éxito.');
+    } else {
+      alert('Error al eliminar.');
     }
   };
 
@@ -168,6 +167,19 @@ const App: React.FC = () => {
     return false;
   };
 
+  const handleLoginSuccess = () => {
+    setIsAdminLoggedIn(true);
+    localStorage.setItem('athletic_auth', 'true');
+    setShowIntro(false);
+    return true;
+  };
+
+  const handleLogout = () => {
+    setIsAdminLoggedIn(false);
+    localStorage.removeItem('athletic_auth');
+    window.location.hash = '';
+  };
+
   if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black uppercase text-xs tracking-[0.3em] animate-pulse">Iniciando Athletic Academy...</div>;
 
   return (
@@ -179,7 +191,7 @@ const App: React.FC = () => {
             students={students} schedules={schedules} config={config} 
             onUpdateConfig={handleUpdateConfig} onUpdateSchedules={handleUpdateSchedules}
             onRegister={handleRegister} onUpdateStudent={handleUpdateStudent} 
-            onDelete={handleDeleteStudent} onLogout={() => { setIsAdminLoggedIn(false); sessionStorage.removeItem('athletic_auth'); }} 
+            onDelete={handleDeleteStudent} onLogout={handleLogout} 
           />
         ) : (
           <>
@@ -189,7 +201,7 @@ const App: React.FC = () => {
             <SchedulesSection schedules={schedules} />
             <section id="register" className="py-24 bg-slate-100"><RegistrationForm config={config} onRegister={handleRegister} /></section>
             <Footer config={config} onAdminClick={() => setShowLoginModal(true)} />
-            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => { if(p==='admin123'){ setIsAdminLoggedIn(true); sessionStorage.setItem('athletic_auth','true'); return true; } return false; }} />
+            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => p === 'admin123' ? handleLoginSuccess() : false} />
           </>
         )}
       </motion.div>
@@ -197,5 +209,4 @@ const App: React.FC = () => {
   );
 };
 
-// Fix for index.tsx: Module '"file:///App"' has no default export.
 export default App;

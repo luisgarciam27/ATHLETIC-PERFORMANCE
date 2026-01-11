@@ -7,7 +7,8 @@ import {
   Zap, Phone, Trash,
   Save, Image as ImageIcon, Wallet, Trash2, ListChecks, Plus,
   Settings, UserPlus, Share2,
-  CreditCard, CheckCircle2, Bell, Edit3, Video, Music2, Mail, Facebook, Instagram, History, Receipt, ArrowDownCircle, ArrowUpCircle
+  // Add Target to imports
+  CreditCard, CheckCircle2, Bell, Edit3, Video, Music2, Mail, Facebook, Instagram, History, Receipt, ArrowDownCircle, ArrowUpCircle, Target
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RegistrationForm } from './RegistrationForm';
@@ -25,6 +26,8 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
+const MODALITIES = ['Mensual Regular', 'Becado', 'Matrícula Solo', 'Convenio'];
+
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
   students, schedules, config, onUpdateConfig, onUpdateSchedules, onRegister, onUpdateStudent, onDelete, onLogout 
 }) => {
@@ -35,6 +38,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [studentPayments, setStudentPayments] = useState<Payment[]>([]);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [selectedModality, setSelectedModality] = useState<string | null>(null);
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'Paid' | 'Pending'>('all');
   
   const [localConfig, setLocalConfig] = useState<AcademyConfig>({ ...config });
@@ -48,9 +52,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const fullName = `${s.firstName} ${s.lastName}`.toLowerCase();
       const matchesSearch = fullName.includes(searchTerm.toLowerCase()) || s.parentPhone.includes(searchTerm) || (s.qrCode && s.qrCode.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesPayment = paymentFilter === 'all' || s.paymentStatus === paymentFilter;
-      return matchesSearch && matchesPayment;
+      const matchesModality = !selectedModality || s.modality === selectedModality;
+      return matchesSearch && matchesPayment && matchesModality;
     });
-  }, [students, searchTerm, paymentFilter]);
+  }, [students, searchTerm, paymentFilter, selectedModality]);
 
   const loadPaymentHistory = async (studentId: string) => {
     const res: any = await supabaseFetch('GET', 'payments', null, `student_id=eq.${studentId}&order=payment_date.desc`);
@@ -95,22 +100,57 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  // Fix: Implement handleAnularPago to allow canceling a payment record
   const handleAnularPago = async (payment: Payment) => {
-    if (!window.confirm('¿Anular pago? Se sumará a la deuda.')) return;
-    const delRes = await supabaseFetch('DELETE', 'payments', { id: payment.id });
-    if (delRes && !delRes.error) {
+    if (!window.confirm('¿Anular este pago? El monto se sumará nuevamente a la deuda del alumno.')) return;
+    
+    const res = await supabaseFetch('DELETE', 'payments', { id: payment.id });
+    if (res !== null && !res?.error) {
       const student = students.find(s => s.id === payment.student_id);
       if (student) {
-        const updated: Student = {
+        const newPending = (student.pending_balance || 0) + payment.amount;
+        const newTotalPaid = Math.max(0, (student.total_paid || 0) - payment.amount);
+        
+        const updatedStudent: Student = {
           ...student,
-          pending_balance: (student.pending_balance || 0) + payment.amount,
-          total_paid: Math.max(0, (student.total_paid || 0) - payment.amount),
-          paymentStatus: 'Pending'
+          pending_balance: newPending,
+          total_paid: newTotalPaid,
+          paymentStatus: newPending <= 0 ? 'Paid' : 'Pending'
         };
-        await onUpdateStudent(updated);
-        if (historyStudent) loadPaymentHistory(historyStudent.id);
+        
+        await onUpdateStudent(updatedStudent);
+        // Refresh local history if applicable
+        if (historyStudent && historyStudent.id === student.id) {
+           loadPaymentHistory(student.id);
+        }
+        alert('Pago anulado.');
       }
+    } else {
+      alert('Error al anular pago.');
     }
+  };
+
+  const handleSendReminder = (student: Student) => {
+    const parentName = student.parentName || 'Estimado apoderado';
+    const athleteName = `${student.firstName} ${student.lastName}`;
+    const waNumber = student.parentPhone.replace(/\D/g, '');
+    
+    // Calcular días desde inscripción o registro
+    const regDate = student.registrationDate ? new Date(student.registrationDate) : new Date();
+    const diffTime = Math.abs(new Date().getTime() - regDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    const message = `¡Hola ${parentName}! 👋 Le saludamos de *Athletic Academy*. Le recordamos que ya se cumplió una semana desde el último registro de *${athleteName}*. Favor de confirmar si desea renovar o si tiene algún pago pendiente. ¡Gracias! ⚽`;
+    
+    window.open(`https://wa.me/51${waNumber}?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const checkNeedsReminder = (student: Student) => {
+    if (!student.registrationDate) return false;
+    const regDate = new Date(student.registrationDate);
+    const diffTime = Math.abs(new Date().getTime() - regDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 7 && student.paymentStatus === 'Pending';
   };
 
   const handleSaveAll = async () => {
@@ -140,7 +180,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <nav className="space-y-2 flex-grow">
           {[
             { id: 'overview', icon: LayoutDashboard, label: 'Resumen' },
-            { id: 'students', icon: Users, label: 'Alumnos' },
+            { id: 'students', icon: Users, label: 'Alumnos y Modalidades' },
             { id: 'schedules', icon: ListChecks, label: 'Ciclos / Horarios' },
             { id: 'settings', icon: Settings, label: 'Personalización Web' }
           ].map((item) => (
@@ -156,7 +196,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <header className="flex justify-between items-end mb-12">
           <h1 className="text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">
             {activeTab === 'overview' && 'Estadísticas'}
-            {activeTab === 'students' && 'Matrícula Pro'}
+            {activeTab === 'students' && 'Gestión de Alumnos'}
             {activeTab === 'schedules' && 'Planificación'}
             {activeTab === 'settings' && 'Gestor de Contenidos'}
           </h1>
@@ -188,6 +228,33 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           {activeTab === 'students' && (
             <div className="space-y-8 pb-32">
+              {/* MODALITY CARDS */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button 
+                  onClick={() => setSelectedModality(null)}
+                  className={`p-6 rounded-[2.5rem] border-2 transition-all text-left ${!selectedModality ? 'bg-slate-900 text-white border-slate-900 shadow-xl scale-105' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'}`}
+                >
+                  <Users size={20} className="mb-4 opacity-50"/>
+                  <p className="font-black text-lg uppercase tracking-tighter">Todos</p>
+                  <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">{students.length} Registros</p>
+                </button>
+                {MODALITIES.map(m => {
+                  const count = students.filter(s => s.modality === m).length;
+                  const isActive = selectedModality === m;
+                  return (
+                    <button 
+                      key={m}
+                      onClick={() => setSelectedModality(m)}
+                      className={`p-6 rounded-[2.5rem] border-2 transition-all text-left ${isActive ? 'bg-blue-600 text-white border-blue-600 shadow-xl scale-105' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'}`}
+                    >
+                      <Target size={20} className="mb-4 opacity-50"/>
+                      <p className="font-black text-lg uppercase tracking-tighter">{m}</p>
+                      <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest">{count} Alumnos</p>
+                    </button>
+                  );
+                })}
+              </div>
+
               <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-8 rounded-[3rem] shadow-xl border border-white">
                 <div className="flex bg-slate-50 rounded-2xl p-1 border border-slate-100">
                   <button onClick={() => setPaymentFilter('all')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest ${paymentFilter === 'all' ? 'bg-slate-900 text-white' : 'text-slate-400'}`}>Todos</button>
@@ -196,7 +263,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="flex gap-4 flex-grow max-w-2xl">
                   <div className="relative flex-grow">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20}/>
-                    <input type="text" placeholder="Buscar..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-14 pr-6 py-4 bg-slate-50 rounded-2xl outline-none font-bold text-sm"/>
+                    <input type="text" placeholder="Buscar por nombre, DNI o WhatsApp..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-14 pr-6 py-4 bg-slate-50 rounded-2xl outline-none font-bold text-sm"/>
                   </div>
                   <button onClick={() => setShowRegisterModal(true)} className="px-8 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-xl"><UserPlus size={18}/> Nuevo</button>
                 </div>
@@ -206,24 +273,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-slate-900 text-white">
-                      <th className="p-8 text-[10px] font-black uppercase">Atleta</th>
-                      <th className="p-8 text-[10px] font-black uppercase">Padre/Madre</th>
+                      <th className="p-8 text-[10px] font-black uppercase">Atleta / Modalidad</th>
+                      <th className="p-8 text-[10px] font-black uppercase">Contacto</th>
+                      <th className="p-8 text-[10px] font-black uppercase">Estado</th>
                       <th className="p-8 text-[10px] font-black uppercase text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {filteredStudents.map(s => (
+                    {filteredStudents.length === 0 ? (
+                      <tr><td colSpan={4} className="p-20 text-center text-slate-300 font-black uppercase tracking-widest">Sin resultados</td></tr>
+                    ) : filteredStudents.map(s => (
                       <tr key={s.id} className="hover:bg-slate-50 transition-colors">
                         <td className="p-8">
                           <p className="font-black text-slate-900 uppercase text-sm">{s.firstName} {s.lastName}</p>
-                          <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">{s.category}</span>
+                          <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">{s.modality || 'Regular'}</span>
                         </td>
                         <td className="p-8">
                           <p className="font-bold text-xs text-slate-700">{s.parentName}</p>
                           <p className="text-[10px] font-bold text-emerald-500 flex items-center gap-1"><Phone size={10}/> {s.parentPhone}</p>
                         </td>
+                        <td className="p-8">
+                          <p className={`font-black text-sm ${s.paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {s.paymentStatus === 'Paid' ? 'AL DÍA' : `DEUDA S/ ${s.pending_balance}`}
+                          </p>
+                          <p className="text-[8px] font-black text-slate-400 uppercase">Reg: {s.registrationDate ? new Date(s.registrationDate).toLocaleDateString() : '-'}</p>
+                        </td>
                         <td className="p-8 text-center">
                           <div className="flex items-center justify-center gap-2">
+                            <button 
+                              onClick={() => handleSendReminder(s)} 
+                              title="Recordatorio Semanal"
+                              className={`p-3 rounded-xl transition-all ${checkNeedsReminder(s) ? 'bg-amber-100 text-amber-600 animate-bounce' : 'bg-slate-50 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600'}`}
+                            >
+                              <Bell size={16}/>
+                            </button>
                             <button onClick={() => setPaymentStudent(s)} className="p-3 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white"><Wallet size={16}/></button>
                             <button onClick={() => setHistoryStudent(s)} className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white"><History size={16}/></button>
                             <button onClick={() => setEditingStudent(s)} className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white"><Edit3 size={16}/></button>
@@ -417,7 +500,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                }} className="grid md:grid-cols-2 gap-8">
                  <div><label className={labelClasses}>Nombres</label><input name="firstName" defaultValue={editingStudent.firstName} className={inputClasses}/></div>
                  <div><label className={labelClasses}>Apellidos</label><input name="lastName" defaultValue={editingStudent.lastName} className={inputClasses}/></div>
-                 <div><label className={labelClasses}>Modalidad</label><select name="modality" defaultValue={editingStudent.modality} className={inputClasses}><option value="Mensual Regular">Mensual Regular</option><option value="Becado Parcial">Becado Parcial</option><option value="Becado Total">Becado Total</option></select></div>
+                 <div><label className={labelClasses}>Modalidad</label>
+                   <select name="modality" defaultValue={editingStudent.modality} className={inputClasses}>
+                     {MODALITIES.map(m => <option key={m} value={m}>{m}</option>)}
+                   </select>
+                 </div>
                  <div><label className={labelClasses}>WhatsApp</label><input name="parentPhone" defaultValue={editingStudent.parentPhone} className={inputClasses}/></div>
                  <div><label className={labelClasses}>Recaudado S/</label><input name="total_paid" type="number" defaultValue={editingStudent.total_paid} className={inputClasses}/></div>
                  <div><label className={labelClasses}>Deuda S/</label><input name="pending_balance" type="number" defaultValue={editingStudent.pending_balance} className={inputClasses}/></div>
