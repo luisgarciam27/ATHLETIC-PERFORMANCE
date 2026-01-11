@@ -13,6 +13,16 @@ export type ClassSchedule = {
   endDate?: string;
 };
 
+export type Payment = {
+  id: string;
+  student_id: string;
+  amount: number;
+  method: 'Yape' | 'Plin' | 'BCP' | 'Efectivo';
+  concept: string;
+  payment_date: string;
+  status: 'valid' | 'cancelled';
+};
+
 export type Student = {
   id: string;
   registrationDate: string;
@@ -31,7 +41,8 @@ export type Student = {
   enrollmentPayment?: number;
   comments?: string;
   enrollment_fee?: number;
-  pending_balance?: number; // Saldo pendiente para WhatsApp
+  pending_balance?: number;
+  total_paid?: number;
 };
 
 export type IntroSlide = {
@@ -59,7 +70,6 @@ export type AcademyConfig = {
   welcomeMessage: string;
   introSlides: IntroSlide[];
   staffStories: StaffStory[];
-  // Contact & Social
   contactPhone: string;
   contactEmail: string;
   contactAddress: string;
