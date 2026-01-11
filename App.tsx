@@ -31,9 +31,9 @@ const DEFAULT_CONFIG: AcademyConfig = {
   contactPhone: "+51 900 000 000",
   contactEmail: "hola@athletic.pe",
   contactAddress: "Sede Principal, Lima",
-  socialFacebook: "",
-  socialInstagram: "",
-  socialTiktok: "",
+  socialFacebook: "https://facebook.com",
+  socialInstagram: "https://instagram.com",
+  socialTiktok: "https://tiktok.com",
   socialWhatsapp: "51900000000"
 };
 
@@ -75,7 +75,10 @@ const App: React.FC = () => {
           heroImages: cloudConfig.hero_images || DEFAULT_CONFIG.heroImages,
           aboutImages: cloudConfig.about_images || DEFAULT_CONFIG.aboutImages,
           socialWhatsapp: cloudConfig.social_whatsapp || DEFAULT_CONFIG.socialWhatsapp,
-          introSlides: cloudConfig.intro_slides || DEFAULT_CONFIG.introSlides
+          introSlides: cloudConfig.intro_slides || DEFAULT_CONFIG.introSlides,
+          socialFacebook: cloudConfig.social_facebook || DEFAULT_CONFIG.socialFacebook,
+          socialInstagram: cloudConfig.social_instagram || DEFAULT_CONFIG.socialInstagram,
+          socialTiktok: cloudConfig.social_tiktok || DEFAULT_CONFIG.socialTiktok
         });
       }
     } catch (e) {
@@ -166,7 +169,7 @@ const App: React.FC = () => {
 
   if (isLoading) return <div className="h-screen flex items-center justify-center bg-white text-slate-900 font-bold uppercase text-[10px] tracking-widest animate-pulse">Cargando Academia...</div>;
 
-  // RUTA SECRETA DE ADMIN
+  // RUTA SECRETA DE ADMIN (Solo si hay #dashboard en la URL)
   if (isAdminRoute) {
     if (!isAdminLoggedIn) {
       return (
@@ -189,12 +192,12 @@ const App: React.FC = () => {
     );
   }
 
-  // INTRO ANIMADA (Lo primero que ve el cliente)
+  // INTRO ANIMADA (Lo primero que ve el cliente siempre)
   if (showIntro) {
     return <IntroPortal slides={config.introSlides} onComplete={() => setShowIntro(false)} />;
   }
 
-  // WEB PRINCIPAL
+  // LANDING PAGE PRINCIPAL
   return (
     <div className="font-ubuntu">
       <Navbar logoUrl={config.logoUrl} onTabChange={() => {}} />
@@ -204,7 +207,7 @@ const App: React.FC = () => {
       <section id="register" className="py-24 bg-slate-100">
         <RegistrationForm config={config} onRegister={handleRegister} />
       </section>
-      <Footer config={config} onAdminClick={() => {}} />
+      <Footer config={config} onAdminClick={() => { window.location.hash = '#dashboard'; }} />
     </div>
   );
 };

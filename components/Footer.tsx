@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Facebook, Instagram, MapPin, Phone, Mail, Zap, ArrowUp, MessageCircle, Music2 } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Phone, Mail, Zap, ArrowUp, MessageCircle, Music2, Shield } from 'lucide-react';
 import { AcademyConfig } from '../types';
 
 interface FooterProps {
@@ -8,7 +8,7 @@ interface FooterProps {
   onAdminClick: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ config }) => {
+export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
   const handleWhatsAppRedirect = () => {
     const num = (config.socialWhatsapp || '51900000000').replace(/\D/g, '');
     window.open(`https://wa.me/${num}?text=Hola!%20Deseo%20información%20sobre%20la%20academia%20Athletic.`, '_blank');
@@ -87,8 +87,11 @@ export const Footer: React.FC<FooterProps> = ({ config }) => {
         </div>
 
         <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-4">
             © 2026 Athletic Élite Academy. Sede Lima, Perú.
+            <button onClick={onAdminClick} className="opacity-10 hover:opacity-100 transition-opacity">
+               <Shield size={10} />
+            </button>
           </p>
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
