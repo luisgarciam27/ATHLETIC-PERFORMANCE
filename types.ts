@@ -29,8 +29,9 @@ export type Student = {
   nextPaymentDate: string;
   qrCode: string;
   enrollmentPayment?: number;
-  comments?: string; // Nuevo campo para observaciones
-  enrollment_fee?: number; // Para el registro de pago de inscripción
+  comments?: string;
+  enrollment_fee?: number;
+  pending_balance?: number; // Saldo pendiente para WhatsApp
 };
 
 export type IntroSlide = {

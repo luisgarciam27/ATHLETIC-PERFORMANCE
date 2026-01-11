@@ -68,7 +68,7 @@ const App: React.FC = () => {
   const [showIntro, setShowIntro] = useState(true);
 
   const fetchData = async () => {
-    // 1. Alumnos
+    // Alumnos
     const studentsRes: any = await supabaseFetch('GET', 'students');
     if (studentsRes && Array.isArray(studentsRes)) {
       setStudents(studentsRes.map(s => ({
@@ -80,30 +80,34 @@ const App: React.FC = () => {
         parentPhone: s.parent_phone,
         paymentStatus: s.payment_status,
         nextPaymentDate: s.next_payment_date,
-        qrCode: s.qr_code
+        qrCode: s.qr_code,
+        pending_balance: s.pending_balance || 0,
+        comments: s.comments,
+        enrollment_fee: s.enrollment_fee
       })));
     }
 
-    // 2. Horarios
+    // Horarios
     const schedulesRes: any = await supabaseFetch('GET', 'schedules');
     if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
       setSchedules(schedulesRes.map(s => ({
         ...s,
         startDate: s.start_date,
-        endDate: s.end_date
+        endDate: s.end_date,
+        days: Array.isArray(s.days) ? s.days : []
       })));
     }
 
-    // 3. Configuración
+    // Configuración Completa
     const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
     if (cloudConfig && !cloudConfig.error) {
       setConfig({
         logoUrl: cloudConfig.logo_url || DEFAULT_CONFIG.logoUrl,
-        heroImages: (cloudConfig.hero_images?.length > 0) ? cloudConfig.hero_images : DEFAULT_CONFIG.heroImages,
-        aboutImages: (cloudConfig.about_images?.length > 0) ? cloudConfig.about_images : DEFAULT_CONFIG.aboutImages,
+        heroImages: (cloudConfig.hero_images && cloudConfig.hero_images.length > 0) ? cloudConfig.hero_images : DEFAULT_CONFIG.heroImages,
+        aboutImages: (cloudConfig.about_images && cloudConfig.about_images.length > 0) ? cloudConfig.about_images : DEFAULT_CONFIG.aboutImages,
         welcomeMessage: cloudConfig.welcome_message || DEFAULT_CONFIG.welcomeMessage,
-        introSlides: (cloudConfig.intro_slides?.length > 0) ? cloudConfig.intro_slides : DEFAULT_CONFIG.introSlides,
-        staffStories: (cloudConfig.staff_stories?.length > 0) ? cloudConfig.staff_stories : DEFAULT_CONFIG.staffStories,
+        introSlides: (cloudConfig.intro_slides && cloudConfig.intro_slides.length > 0) ? cloudConfig.intro_slides : DEFAULT_CONFIG.introSlides,
+        staffStories: (cloudConfig.staff_stories && cloudConfig.staff_stories.length > 0) ? cloudConfig.staff_stories : DEFAULT_CONFIG.staffStories,
         contactPhone: cloudConfig.contact_phone || DEFAULT_CONFIG.contactPhone,
         contactEmail: cloudConfig.contact_email || DEFAULT_CONFIG.contactEmail,
         contactAddress: cloudConfig.contact_address || DEFAULT_CONFIG.contactAddress,
@@ -120,7 +124,7 @@ const App: React.FC = () => {
       try {
         await fetchData();
       } catch (err) {
-        console.error("Error inicializando:", err);
+        console.error("Error cargando configuración inicial:", err);
       } finally {
         const auth = sessionStorage.getItem('athletic_auth');
         if (auth === 'true') {
@@ -140,7 +144,7 @@ const App: React.FC = () => {
         id: s.id,
         category: s.category,
         age: s.age,
-        days: s.days,
+        days: s.days || [],
         time: s.time,
         price: s.price,
         color: s.color,
@@ -163,9 +167,11 @@ const App: React.FC = () => {
       address: newStudent.address,
       payment_status: newStudent.paymentStatus || 'Pending',
       next_payment_date: newStudent.nextPaymentDate,
-      qr_code: newStudent.qrCode
+      qr_code: newStudent.qrCode,
+      pending_balance: newStudent.pending_balance || 0,
+      enrollment_fee: newStudent.enrollment_fee || 0,
+      comments: newStudent.comments || ''
     };
-
     const result = await supabaseFetch('POST', 'students', payload);
     if (result && !result.error) {
       await fetchData();
@@ -181,7 +187,13 @@ const App: React.FC = () => {
       last_name: student.lastName,
       payment_status: student.paymentStatus,
       next_payment_date: student.nextPaymentDate,
-      parent_phone: student.parentPhone
+      parent_phone: student.parentPhone,
+      parent_name: student.parentName,
+      address: student.address,
+      category: student.category,
+      pending_balance: student.pending_balance,
+      enrollment_fee: student.enrollment_fee,
+      comments: student.comments
     });
     if (result && !result.error) {
       await fetchData();
@@ -191,7 +203,7 @@ const App: React.FC = () => {
   }
 
   async function handleDeleteStudent(id: string) {
-    if (window.confirm('¿Eliminar registro?')) {
+    if (window.confirm('¿Eliminar registro permanentemente?')) {
       const result = await supabaseFetch('DELETE', 'students', { id });
       if (result !== null && !result.error) await fetchData();
     }
@@ -224,7 +236,7 @@ const App: React.FC = () => {
   if (isLoading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-slate-900 gap-4">
       <div className="w-16 h-16 bg-blue-600 rounded-2xl animate-spin" />
-      <p className="text-white font-black text-xs uppercase tracking-[0.5em] animate-pulse">Cargando Academia</p>
+      <p className="text-white font-black text-xs uppercase tracking-[0.5em] animate-pulse">Iniciando Athletic App</p>
     </div>
   );
 
@@ -250,7 +262,7 @@ const App: React.FC = () => {
             <Hero images={config.heroImages} />
             <About images={config.aboutImages} />
             <SchedulesSection schedules={schedules} />
-            <section id="register" className="py-24 bg-slate-100"><RegistrationForm onRegister={handleRegister} /></section>
+            <section id="register" className="py-24 bg-slate-100"><RegistrationForm config={config} onRegister={handleRegister} /></section>
             <Footer config={config} onAdminClick={() => setShowLoginModal(true)} />
             <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => { if(p==='admin123'){ setIsAdminLoggedIn(true); sessionStorage.setItem('athletic_auth','true'); return true; } return false; }} />
           </>
@@ -260,5 +272,4 @@ const App: React.FC = () => {
   );
 };
 
-// Fixed: Added missing default export for the App component
 export default App;
