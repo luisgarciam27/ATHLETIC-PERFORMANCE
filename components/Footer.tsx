@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Facebook, Instagram, MapPin, Phone, Mail, Zap, ArrowUp, Lock, Youtube, Music2 } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Phone, Mail, Zap, ArrowUp, Lock, Music2, Rocket } from 'lucide-react';
 import { AcademyConfig } from '../types';
 
 interface FooterProps {
@@ -83,10 +83,28 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-            © 2024 Athletic Élite Academy. Forjando Campeones.
-          </p>
+        <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="flex flex-col gap-1">
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+              © 2026 Athletic Élite Academy. Forjando Campeones.
+            </p>
+            <a 
+              href="https://gaorsystem.vercel.app/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="group flex items-center gap-2 text-slate-300 hover:text-blue-500 transition-all text-[9px] font-bold uppercase tracking-widest"
+            >
+              <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center group-hover:bg-blue-50 transition-all shadow-sm border border-slate-100 p-1">
+                <svg viewBox="0 0 24 24" className="w-full h-full text-blue-600 fill-current" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" />
+                </svg>
+              </div>
+              <span className="flex flex-col">
+                <span className="leading-tight">© 2026 Desarrollado por GaorSystemPeru</span>
+                <span className="text-[7px] text-blue-400 group-hover:underline">gaorsystem.vercel.app</span>
+              </span>
+            </a>
+          </div>
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all border border-slate-200 shadow-sm"

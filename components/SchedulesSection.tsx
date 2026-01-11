@@ -24,7 +24,7 @@ export const SchedulesSection: React.FC<SchedulesSectionProps> = ({ schedules })
           viewport={{ once: true }}
         >
           <span className="text-blue-600 font-black text-[10px] tracking-[0.4em] uppercase mb-4 block">Entrenamiento Élite</span>
-          <h2 className="text-5xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter uppercase leading-none">HORARIOS & CICLOS 2024</h2>
+          <h2 className="text-5xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter uppercase leading-none">HORARIOS & CICLOS 2026</h2>
           <p className="text-slate-500 font-medium text-lg leading-relaxed">
             Nuestros grupos están divididos por niveles y edades para garantizar una formación personalizada y efectiva.
           </p>
@@ -87,7 +87,7 @@ export const SchedulesSection: React.FC<SchedulesSectionProps> = ({ schedules })
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Estado</span>
-                      <span className="text-sm font-black uppercase text-emerald-600">Ciclo Activo 2024</span>
+                      <span className="text-sm font-black uppercase text-emerald-600">Ciclo Activo 2026</span>
                     </div>
                  </div>
                </div>

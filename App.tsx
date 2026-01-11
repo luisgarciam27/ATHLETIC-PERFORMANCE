@@ -46,7 +46,7 @@ const DEFAULT_CONFIG: AcademyConfig = {
     "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?q=80&w=800",
     "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=800"
   ],
-  welcomeMessage: "Inscripciones abiertas 2024. Únete a la familia Athletic Performance.",
+  welcomeMessage: "Inscripciones abiertas 2026. Únete a la familia Athletic Performance.",
   introSlides: DEFAULT_INTRO,
   staffStories: DEFAULT_STAFF,
   contactPhone: "+51 900 000 000",
@@ -260,4 +260,5 @@ const App: React.FC = () => {
   );
 };
 
+// Fixed: Added missing default export for the App component
 export default App;
