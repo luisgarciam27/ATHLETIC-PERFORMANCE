@@ -45,6 +45,7 @@ const App: React.FC = () => {
   const [showIntro, setShowIntro] = useState(true);
 
   const fetchData = async () => {
+    // 1. Obtener Alumnos
     const studentsRes: any = await supabaseFetch('GET', 'students');
     if (studentsRes && Array.isArray(studentsRes)) {
       setStudents(studentsRes.map(s => ({
@@ -53,15 +54,17 @@ const App: React.FC = () => {
         parentName: s.parent_name, parentPhone: s.parent_phone,
         paymentStatus: s.payment_status, qrCode: s.qr_code,
         pending_balance: s.pending_balance || 0, total_paid: s.total_paid || 0,
-        comments: s.comments
+        comments: s.comments, scheduleId: s.schedule_id, modality: s.modality
       })));
     }
 
+    // 2. Obtener Horarios
     const schedulesRes: any = await supabaseFetch('GET', 'schedules');
     if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
       setSchedules(schedulesRes.map(s => ({ ...s, days: Array.isArray(s.days) ? s.days : [] })));
     }
 
+    // 3. Obtener Configuración
     const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
     if (cloudConfig && !cloudConfig.error) {
       setConfig({
@@ -103,7 +106,10 @@ const App: React.FC = () => {
       first_name: newStudent.firstName, last_name: newStudent.lastName,
       parent_name: newStudent.parentName, parent_phone: newStudent.parentPhone,
       category: newStudent.category, pending_balance: newStudent.pending_balance || 0,
-      payment_status: newStudent.paymentStatus, qr_code: newStudent.qrCode
+      total_paid: newStudent.total_paid || 0, comments: newStudent.comments || "",
+      payment_status: newStudent.paymentStatus, qr_code: newStudent.qrCode,
+      modality: newStudent.modality, birth_date: newStudent.birthDate,
+      address: newStudent.address, schedule_id: newStudent.scheduleId
     };
     const result = await supabaseFetch('POST', 'students', payload);
     if (result && !result.error) { await fetchData(); return true; }
@@ -115,20 +121,32 @@ const App: React.FC = () => {
       id: student.id, first_name: student.firstName, last_name: student.lastName,
       payment_status: student.paymentStatus, pending_balance: student.pending_balance,
       total_paid: student.total_paid, parent_phone: student.parentPhone,
-      parent_name: student.parentName, comments: student.comments
+      parent_name: student.parentName, comments: student.comments,
+      modality: student.modality
     });
     if (result && !result.error) { await fetchData(); return true; }
     return false;
   };
 
   const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm('¿Borrar alumno?')) return;
-    const result = await supabaseFetch('DELETE', 'students', { id });
-    if (result && !result.error) {
-      setStudents(prev => prev.filter(s => s.id !== id));
-      alert('Alumno eliminado exitosamente.');
-    } else {
-      alert('Error al eliminar. Verifique si el alumno tiene pagos asociados.');
+    if (!window.confirm('¿Deseas eliminar permanentemente a este alumno? Se borrará todo su historial de pagos.')) return;
+    
+    try {
+      // 1. Limpiar pagos asociados usando queryParams para filtro directo
+      await supabaseFetch('DELETE', 'payments', null, `student_id=eq.${id}`);
+      
+      // 2. Eliminar al alumno
+      const result = await supabaseFetch('DELETE', 'students', { id });
+      
+      if (result !== null && !result.error) {
+        setStudents(prev => prev.filter(s => s.id !== id));
+        alert('Alumno y pagos eliminados con éxito.');
+      } else {
+        alert('Error al intentar eliminar de la base de datos.');
+      }
+    } catch (err) {
+      console.error("Error en eliminación:", err);
+      alert('Ocurrió un error inesperado al eliminar.');
     }
   };
 
@@ -146,7 +164,7 @@ const App: React.FC = () => {
     return false;
   };
 
-  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black">CARGANDO...</div>;
+  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black text-xs tracking-widest uppercase animate-pulse">Cargando Athletic Performance...</div>;
 
   return (
     <>
