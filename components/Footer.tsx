@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Facebook, Instagram, MapPin, Phone, Mail, Zap, ArrowUp, Lock, Music2, Rocket } from 'lucide-react';
+import { Facebook, Instagram, MapPin, Phone, Mail, Zap, ArrowUp, Lock, Music2, MessageCircle } from 'lucide-react';
 import { AcademyConfig } from '../types';
 
 interface FooterProps {
@@ -9,6 +9,11 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
+  const handleWhatsAppRedirect = () => {
+    const num = config.socialWhatsapp.replace(/\D/g, '');
+    window.open(`https://wa.me/${num}?text=Hola!%20Deseo%20información%20sobre%20la%20academia.`, '_blank');
+  };
+
   return (
     <footer className="bg-white border-t border-slate-200 pt-20 pb-10 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
@@ -46,6 +51,13 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
                   <Music2 size={22} />
                 </a>
               )}
+              <button 
+                onClick={handleWhatsAppRedirect} 
+                className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-sm"
+                title="Escribir por WhatsApp"
+              >
+                <MessageCircle size={22} />
+              </button>
             </div>
           </div>
 
@@ -60,7 +72,7 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
           </div>
 
           <div className="lg:col-span-4">
-            <h4 className="font-black text-slate-900 mb-6 uppercase text-xs tracking-widest">Sede Central</h4>
+            <h4 className="font-black text-slate-900 mb-6 uppercase text-xs tracking-widest">Atención Directa</h4>
             <ul className="space-y-4 text-slate-500">
               <li className="flex items-start gap-3 text-sm font-bold">
                 <MapPin size={20} className="text-blue-600 shrink-0" /> {config.contactAddress}
@@ -84,26 +96,11 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
         </div>
 
         <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 text-center md:text-left">
             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-              © 2026 Athletic Élite Academy. Forjando Campeones.
+              © 2026 Athletic Élite Academy. Todos los derechos reservados.
             </p>
-            <a 
-              href="https://gaorsystem.vercel.app/" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="group flex items-center gap-2 text-slate-300 hover:text-blue-500 transition-all text-[9px] font-bold uppercase tracking-widest"
-            >
-              <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center group-hover:bg-blue-50 transition-all shadow-sm border border-slate-100 p-1">
-                <svg viewBox="0 0 24 24" className="w-full h-full text-blue-600 fill-current" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" />
-                </svg>
-              </div>
-              <span className="flex flex-col">
-                <span className="leading-tight">© 2026 Desarrollado por GaorSystemPeru</span>
-                <span className="text-[7px] text-blue-400 group-hover:underline">gaorsystem.vercel.app</span>
-              </span>
-            </a>
+            <p className="text-slate-300 text-[9px] font-bold uppercase tracking-widest">LIMA, PERÚ</p>
           </div>
           <button 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

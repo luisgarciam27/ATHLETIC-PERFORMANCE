@@ -84,26 +84,24 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const handleHashCheck = () => {
-      if (window.location.hash === '#admin' && !isAdminLoggedIn) {
+    const checkAuthAndHash = () => {
+      const auth = localStorage.getItem('athletic_admin_auth');
+      if (auth === 'true') {
+        setIsAdminLoggedIn(true);
+        setShowIntro(false);
+      } else if (window.location.hash === '#admin') {
         setShowLoginModal(true);
       }
     };
 
     fetchData().finally(() => {
-      // Cambio a localStorage para persistencia al refrescar
-      const auth = localStorage.getItem('athletic_auth');
-      if (auth === 'true') { 
-        setIsAdminLoggedIn(true); 
-        setShowIntro(false); 
-      }
-      handleHashCheck();
+      checkAuthAndHash();
       setIsLoading(false);
     });
 
-    window.addEventListener('hashchange', handleHashCheck);
-    return () => window.removeEventListener('hashchange', handleHashCheck);
-  }, [isAdminLoggedIn]);
+    window.addEventListener('hashchange', checkAuthAndHash);
+    return () => window.removeEventListener('hashchange', checkAuthAndHash);
+  }, []);
 
   const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {
     setSchedules(newSchedules);
@@ -135,14 +133,15 @@ const App: React.FC = () => {
       payment_status: student.paymentStatus, pending_balance: student.pending_balance,
       total_paid: student.total_paid, parent_phone: student.parentPhone,
       parent_name: student.parentName, comments: student.comments,
-      modality: student.modality, address: student.address
+      modality: student.modality, address: student.address,
+      schedule_id: student.scheduleId // Asegurar que el ciclo se actualiza
     });
     if (result && !result.error) { await fetchData(); return true; }
     return false;
   };
 
   const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm('¿ELIMINAR ALUMNO? Esta acción borrará también sus pagos.')) return;
+    if (!window.confirm('¿ELIMINAR ALUMNO PERMANENTEMENTE?')) return;
     await supabaseFetch('DELETE', 'payments', null, `student_id=eq.${id}`);
     const result = await supabaseFetch('DELETE', 'students', { id });
     if (result !== null && !result?.error) {
@@ -169,15 +168,16 @@ const App: React.FC = () => {
 
   const handleLoginSuccess = () => {
     setIsAdminLoggedIn(true);
-    localStorage.setItem('athletic_auth', 'true');
+    localStorage.setItem('athletic_admin_auth', 'true');
     setShowIntro(false);
     return true;
   };
 
   const handleLogout = () => {
     setIsAdminLoggedIn(false);
-    localStorage.removeItem('athletic_auth');
+    localStorage.removeItem('athletic_admin_auth');
     window.location.hash = '';
+    window.location.reload();
   };
 
   if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black uppercase text-xs tracking-[0.3em] animate-pulse">Iniciando Athletic Academy...</div>;
