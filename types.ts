@@ -76,5 +76,6 @@ export type AcademyConfig = {
   socialFacebook: string;
   socialInstagram: string;
   socialTiktok: string;
+  social_whatsapp?: string; // Compatibilidad con DB
   socialWhatsapp: string;
 };
