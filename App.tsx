@@ -52,7 +52,7 @@ const App: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      // 1. Cargar Alumnos con mapeo seguro
+      // 1. Alumnos - Mapeo fiel al esquema de tablas del usuario
       const studentsRes: any = await supabaseFetch('GET', 'students');
       if (studentsRes && Array.isArray(studentsRes)) {
         setStudents(studentsRes.map(s => ({
@@ -65,22 +65,35 @@ const App: React.FC = () => {
           address: s.address || '',
           category: s.category || '',
           scheduleId: s.schedule_id || '',
-          paymentStatus: s.payment_status || 'Pending',
+          paymentStatus: (s.payment_status as any) || 'Pending',
           pending_balance: Number(s.pending_balance) || 0,
           total_paid: Number(s.total_paid) || 0,
           modality: s.modality || 'Mensual Regular',
           qrCode: s.qr_code || '',
-          registrationDate: s.registration_date || s.created_at
+          nextPaymentDate: s.next_payment_date || '',
+          enrollmentPayment: Number(s.enrollment_fee) || 0,
+          comments: s.comments || '',
+          registrationDate: s.created_at || new Date().toISOString()
         })));
       }
 
-      // 2. Cargar Horarios (Si falla, usa estáticos)
+      // 2. Horarios
       const schedulesRes: any = await supabaseFetch('GET', 'schedules');
       if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
-        setSchedules(schedulesRes);
+        setSchedules(schedulesRes.map(s => ({
+          id: s.id,
+          category: s.category,
+          age: s.age || '',
+          days: s.days || [],
+          time: s.time || '',
+          duration: '60 min', // Default ya que no está en la tabla
+          price: Number(s.price) || 0,
+          objective: '', // Default ya que no está en la tabla
+          color: s.color || '#3b82f6'
+        })));
       }
 
-      // 3. Cargar Configuración con mapeo de redes sociales
+      // 3. Configuración
       const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
       if (cloudConfig && !cloudConfig.error) {
         setConfig(prev => ({
@@ -108,7 +121,7 @@ const App: React.FC = () => {
         }));
       }
     } catch (e) {
-      console.error("Error crítico de sincronización:", e);
+      console.error("Error cargando datos:", e);
     }
   };
 
@@ -121,31 +134,40 @@ const App: React.FC = () => {
   }, []);
 
   const handleRegister = async (newStudent: Student) => {
-    // Mapeo exhaustivo a snake_case para Supabase
-    const payload = {
+    // MAPEAMOS EXACTAMENTE A LOS NOMBRES DE TUS TABLAS (SNAKE_CASE)
+    const payload: any = {
       first_name: newStudent.firstName,
       last_name: newStudent.lastName,
-      birth_date: newStudent.birthDate,
+      birth_date: newStudent.birthDate || null,
+      category: newStudent.category,
+      modality: newStudent.modality || 'Mensual Regular',
       parent_name: newStudent.parentName,
       parent_phone: newStudent.parentPhone,
       address: newStudent.address,
-      category: newStudent.category,
-      schedule_id: newStudent.scheduleId,
       payment_status: newStudent.paymentStatus,
+      next_payment_date: newStudent.nextPaymentDate || null,
+      qr_code: newStudent.qrCode,
+      comments: newStudent.comments || '',
+      enrollment_fee: newStudent.enrollmentPayment || 0,
       pending_balance: newStudent.pending_balance || 0,
       total_paid: newStudent.total_paid || 0,
-      modality: newStudent.modality,
-      qr_code: newStudent.qrCode,
-      registration_date: new Date().toISOString()
+      schedule_id: newStudent.scheduleId
     };
 
+    // ELIMINAMOS registration_date PORQUE NO EXISTE EN TU TABLA
+    // Supabase llenará automáticamente created_at
+
     const result = await supabaseFetch('POST', 'students', payload);
+    
     if (result && !result.error) {
       await fetchData();
       return true;
     }
-    console.error("Error al registrar:", result?.error);
-    return false;
+    
+    const errorMessage = result?.error?.message || result?.error?.details || 'Error de conexión con la base de datos';
+    console.error("Error detectado en Supabase:", result?.error);
+    
+    throw new Error(errorMessage);
   };
 
   const handleUpdateConfig = async (newConfig: AcademyConfig) => {
@@ -181,8 +203,13 @@ const App: React.FC = () => {
     return false;
   };
 
+  const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {
+    setSchedules(newSchedules);
+    return true;
+  };
+
   const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm('¿ELIMINAR ALUMNO PERMANENTEMENTE?')) return false;
+    if (!window.confirm('¿ELIMINAR ALUMNO DEFINITIVAMENTE?')) return false;
     const result = await supabaseFetch('DELETE', 'students', { id });
     if (!result?.error) {
       setStudents(prev => prev.filter(s => s.id !== id));
@@ -192,10 +219,10 @@ const App: React.FC = () => {
   };
 
   if (isLoading) return (
-    <div className="h-screen flex items-center justify-center bg-slate-900 font-ubuntu">
+    <div className="h-screen flex items-center justify-center bg-slate-900">
       <div className="text-center">
-        <div className="w-20 h-20 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-6"></div>
-        <p className="text-white font-black uppercase tracking-[0.4em] text-xs">Sincronizando Athletic Academy...</p>
+        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-white font-black uppercase text-[10px] tracking-widest">Cargando Sistema Athletic...</p>
       </div>
     </div>
   );
@@ -207,11 +234,7 @@ const App: React.FC = () => {
         schedules={schedules} 
         config={config} 
         onUpdateConfig={handleUpdateConfig} 
-        onUpdateSchedules={async (s) => {
-          // Guardar horarios uno a uno o como array si tienes la lógica
-          setSchedules(s);
-          return true;
-        }}
+        onUpdateSchedules={handleUpdateSchedules}
         onRegister={handleRegister} 
         onUpdateStudent={async (s) => { await fetchData(); return true; }} 
         onDelete={handleDeleteStudent} 
