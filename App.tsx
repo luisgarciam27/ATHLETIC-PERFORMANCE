@@ -18,24 +18,19 @@ const DEFAULT_CONFIG: AcademyConfig = {
   heroImages: ["https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=2070"],
   aboutImages: [
     "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?q=80&w=800",
-    "https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=800",
-    "https://images.unsplash.com/photo-1526232386154-75127e4dd0a8?q=80&w=800",
-    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800"
+    "https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=800"
   ],
   welcomeMessage: "Inscripciones abiertas 2026. Únete a la familia Athletic Performance.",
   introSlides: [
-    { id: '1', type: 'image', url: 'https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=2070', title: 'ATHLETIC', subtitle: 'PERFORMANCE', duration: 4000 },
-    { id: '2', type: 'image', url: 'https://images.unsplash.com/photo-1526232386154-75127e4dd0a8?q=80&w=800', title: 'FORMACIÓN', subtitle: 'DE ÉLITE', duration: 4000 }
+    { id: '1', type: 'image', url: 'https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=2070', title: 'ATHLETIC', subtitle: 'PERFORMANCE', duration: 5000 }
   ],
-  staffStories: [
-    { id: 's1', type: 'video', url: 'https://cdn.pixabay.com/video/2021/04/12/70860-537442186_large.mp4', name: 'Carlos Ruíz', role: 'Director Técnico', duration: 10000 }
-  ],
+  staffStories: [],
   contactPhone: "+51 900 000 000",
   contactEmail: "hola@athletic.pe",
   contactAddress: "Sede Principal, Lima",
-  socialFacebook: "https://facebook.com/athleticlima",
-  socialInstagram: "https://instagram.com/athleticlima",
-  socialTiktok: "https://tiktok.com/@athleticlima",
+  socialFacebook: "",
+  socialInstagram: "",
+  socialTiktok: "",
   socialWhatsapp: "900000000",
   yapeNumber: "900000000",
   yapeName: "ACADEMIA ATHLETIC",
@@ -43,7 +38,7 @@ const DEFAULT_CONFIG: AcademyConfig = {
   plinName: "ACADEMIA ATHLETIC",
   bcpAccount: "191-XXXXXXXX-0-XX",
   bcpCCI: "002-191-XXXXXXXXXXXX-XX",
-  bcpName: "ATHLETIC PERFORMANCE SAC"
+  bcpName: "ATHLETIC PERFORMANCE"
 };
 
 const App: React.FC = () => {
@@ -57,49 +52,57 @@ const App: React.FC = () => {
 
   const fetchData = async () => {
     try {
+      // 1. Cargar Alumnos
       const studentsRes: any = await supabaseFetch('GET', 'students');
       if (studentsRes && Array.isArray(studentsRes)) {
         setStudents(studentsRes.map(s => ({
-          ...s,
-          firstName: s.first_name, lastName: s.last_name, birthDate: s.birth_date,
-          parentName: s.parent_name, parentPhone: s.parent_phone,
-          paymentStatus: s.payment_status, qrCode: s.qr_code,
-          pending_balance: s.pending_balance || 0, total_paid: s.total_paid || 0,
-          comments: s.comments, scheduleId: s.schedule_id, modality: s.modality || 'Mensual Regular',
-          registrationDate: s.registration_date || s.created_at || new Date().toISOString()
+          id: s.id,
+          firstName: s.first_name,
+          lastName: s.last_name,
+          birthDate: s.birth_date,
+          parentName: s.parent_name,
+          parentPhone: s.parent_phone,
+          address: s.address,
+          category: s.category,
+          scheduleId: s.schedule_id,
+          paymentStatus: s.payment_status || 'Pending',
+          pending_balance: s.pending_balance || 0,
+          total_paid: s.total_paid || 0,
+          modality: s.modality || 'Mensual Regular',
+          qrCode: s.qr_code,
+          registrationDate: s.registration_date || s.created_at
         })));
       }
 
-      const schedulesRes: any = await supabaseFetch('GET', 'schedules');
-      if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
-        setSchedules(schedulesRes.map(s => ({ ...s, days: Array.isArray(s.days) ? s.days : [], startDate: s.start_date, endDate: s.end_date })));
-      }
-
+      // 2. Cargar Configuración
       const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
       if (cloudConfig && !cloudConfig.error) {
         setConfig(prev => ({
           ...prev,
-          ...cloudConfig,
-          socialFacebook: cloudConfig.social_facebook || cloudConfig.socialFacebook || prev.socialFacebook,
-          socialInstagram: cloudConfig.social_instagram || cloudConfig.socialInstagram || prev.socialInstagram,
-          socialTiktok: cloudConfig.social_tiktok || cloudConfig.socialTiktok || prev.socialTiktok,
-          socialWhatsapp: cloudConfig.social_whatsapp || cloudConfig.socialWhatsapp || prev.socialWhatsapp,
           logoUrl: cloudConfig.logo_url || prev.logoUrl,
-          heroImages: cloudConfig.hero_images || prev.heroImages,
-          aboutImages: cloudConfig.about_images || prev.aboutImages,
-          introSlides: cloudConfig.intro_slides || prev.introSlides,
-          staffStories: cloudConfig.staff_stories || prev.staffStories,
+          heroImages: Array.isArray(cloudConfig.hero_images) ? cloudConfig.hero_images : prev.heroImages,
+          aboutImages: Array.isArray(cloudConfig.about_images) ? cloudConfig.about_images : prev.aboutImages,
+          welcomeMessage: cloudConfig.welcome_message || prev.welcomeMessage,
+          contactPhone: cloudConfig.contact_phone || prev.contactPhone,
+          contactEmail: cloudConfig.contact_email || prev.contactEmail,
+          contactAddress: cloudConfig.contact_address || prev.contactAddress,
+          socialFacebook: cloudConfig.social_facebook || prev.socialFacebook,
+          socialInstagram: cloudConfig.social_instagram || prev.socialInstagram,
+          socialTiktok: cloudConfig.social_tiktok || prev.socialTiktok,
+          socialWhatsapp: cloudConfig.social_whatsapp || prev.socialWhatsapp,
           yapeNumber: cloudConfig.yape_number || prev.yapeNumber,
           yapeName: cloudConfig.yape_name || prev.yapeName,
           plinNumber: cloudConfig.plin_number || prev.plinNumber,
           plinName: cloudConfig.plin_name || prev.plinName,
           bcpAccount: cloudConfig.bcp_account || prev.bcpAccount,
           bcpCCI: cloudConfig.bcp_cci || prev.bcpCCI,
-          bcpName: cloudConfig.bcp_name || prev.bcpName
+          bcpName: cloudConfig.bcp_name || prev.bcpName,
+          introSlides: Array.isArray(cloudConfig.intro_slides) ? cloudConfig.intro_slides : prev.introSlides,
+          staffStories: Array.isArray(cloudConfig.staff_stories) ? cloudConfig.staff_stories : prev.staffStories
         }));
       }
     } catch (e) {
-      console.error("Error loading data", e);
+      console.error("Error al sincronizar con Supabase:", e);
     }
   };
 
@@ -111,89 +114,82 @@ const App: React.FC = () => {
     });
   }, []);
 
-  const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {
-    setSchedules(newSchedules);
-    for (const s of newSchedules) {
-      await supabaseFetch('POST', 'schedules', { ...s, id: s.id, days: s.days || [], start_date: s.startDate, end_date: s.endDate });
-    }
-    return true;
-  };
-
   const handleRegister = async (newStudent: Student) => {
+    // MAPEAMOS A NOMBRES DE COLUMNA DE SUPABASE (snake_case)
     const payload = {
-      first_name: newStudent.firstName, last_name: newStudent.lastName,
-      parent_name: newStudent.parentName, parent_phone: newStudent.parentPhone,
-      category: newStudent.category, pending_balance: newStudent.pending_balance || 0,
-      total_paid: newStudent.total_paid || 0, comments: newStudent.comments || "",
-      payment_status: newStudent.paymentStatus, qr_code: newStudent.qrCode,
-      modality: newStudent.modality, birth_date: newStudent.birthDate,
-      address: newStudent.address, schedule_id: newStudent.scheduleId,
+      first_name: newStudent.firstName,
+      last_name: newStudent.lastName,
+      birth_date: newStudent.birthDate,
+      parent_name: newStudent.parentName,
+      parent_phone: newStudent.parentPhone,
+      address: newStudent.address,
+      category: newStudent.category,
+      schedule_id: newStudent.scheduleId,
+      payment_status: newStudent.paymentStatus,
+      pending_balance: newStudent.pending_balance || 0,
+      total_paid: newStudent.total_paid || 0,
+      modality: newStudent.modality,
+      qr_code: newStudent.qrCode,
       registration_date: new Date().toISOString()
     };
+
     const result = await supabaseFetch('POST', 'students', payload);
-    if (result && !result.error) { await fetchData(); return true; }
-    return false;
-  };
-
-  const handleUpdateStudent = async (student: Student) => {
-    const result = await supabaseFetch('PATCH', 'students', {
-      id: student.id, first_name: student.firstName, last_name: student.lastName,
-      payment_status: student.paymentStatus, pending_balance: student.pending_balance,
-      total_paid: student.total_paid, parent_phone: student.parentPhone,
-      parent_name: student.parentName, comments: student.comments,
-      modality: student.modality, address: student.address,
-      schedule_id: student.scheduleId
-    });
-    if (result && !result.error) { await fetchData(); return true; }
-    return false;
-  };
-
-  const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm('¿ELIMINAR ALUMNO DEFINITIVAMENTE?')) return;
-    await supabaseFetch('DELETE', 'payments', null, `student_id=eq.${id}`);
-    const result = await supabaseFetch('DELETE', 'students', { id });
-    if (result !== null && !result?.error) {
-      setStudents(prev => prev.filter(s => s.id !== id));
+    if (result && !result.error) {
+      await fetchData(); // Recargar datos
       return true;
     }
     return false;
   };
 
   const handleUpdateConfig = async (newConfig: AcademyConfig) => {
-    const result = await supabaseFetch('PATCH', 'academy_config', {
-      id: 1, 
-      logo_url: newConfig.logoUrl, 
+    const payload = {
+      id: 1,
+      logo_url: newConfig.logoUrl,
       hero_images: newConfig.heroImages,
-      about_images: newConfig.aboutImages, 
+      about_images: newConfig.aboutImages,
       welcome_message: newConfig.welcomeMessage,
-      contact_phone: newConfig.contactPhone, 
+      contact_phone: newConfig.contactPhone,
       contact_email: newConfig.contactEmail,
-      contact_address: newConfig.contactAddress, 
+      contact_address: newConfig.contactAddress,
       social_facebook: newConfig.socialFacebook,
-      social_instagram: newConfig.socialInstagram, 
+      social_instagram: newConfig.socialInstagram,
       social_tiktok: newConfig.socialTiktok,
       social_whatsapp: newConfig.socialWhatsapp,
-      intro_slides: newConfig.introSlides,
-      staff_stories: newConfig.staffStories,
       yape_number: newConfig.yapeNumber,
       yape_name: newConfig.yapeName,
       plin_number: newConfig.plinNumber,
       plin_name: newConfig.plinName,
       bcp_account: newConfig.bcpAccount,
       bcp_cci: newConfig.bcpCCI,
-      bcp_name: newConfig.bcpName
-    });
-    if (result && !result.error) { 
-      setConfig(newConfig); 
-      return true; 
+      bcp_name: newConfig.bcpName,
+      intro_slides: newConfig.introSlides,
+      staff_stories: newConfig.staffStories
+    };
+
+    const result = await supabaseFetch('PATCH', 'academy_config', payload);
+    if (result && !result.error) {
+      setConfig(newConfig);
+      return true;
+    }
+    return false;
+  };
+
+  const handleDeleteStudent = async (id: string) => {
+    if (!window.confirm('¿ELIMINAR ALUMNO PERMANENTEMENTE?')) return false;
+    const result = await supabaseFetch('DELETE', 'students', { id });
+    if (!result?.error) {
+      setStudents(prev => prev.filter(s => s.id !== id));
+      return true;
     }
     return false;
   };
 
   if (isLoading) return (
-    <div className="h-screen flex flex-col items-center justify-center bg-white">
-      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-slate-400 font-black text-[10px] tracking-widest uppercase">Cargando...</p>
+    <div className="h-screen flex items-center justify-center bg-slate-900">
+      <div className="text-center">
+        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-white font-black uppercase tracking-[0.3em] text-xs">Cargando Athletic Academy...</p>
+      </div>
     </div>
   );
 
@@ -204,14 +200,11 @@ const App: React.FC = () => {
         schedules={schedules} 
         config={config} 
         onUpdateConfig={handleUpdateConfig} 
-        onUpdateSchedules={handleUpdateSchedules}
+        onUpdateSchedules={async (s) => true}
         onRegister={handleRegister} 
-        onUpdateStudent={handleUpdateStudent} 
+        onUpdateStudent={async (s) => { await fetchData(); return true; }} 
         onDelete={handleDeleteStudent} 
-        onLogout={() => { 
-          setIsAdminLoggedIn(false); 
-          localStorage.removeItem('athletic_admin_auth'); 
-        }} 
+        onLogout={() => { setIsAdminLoggedIn(false); localStorage.removeItem('athletic_admin_auth'); }} 
       />
     );
   }
@@ -230,20 +223,10 @@ const App: React.FC = () => {
             <RegistrationForm config={config} onRegister={handleRegister} />
           </section>
           <Footer config={config} onAdminClick={() => setShowLoginModal(true)} />
-          
-          <LoginModal 
-            isOpen={showLoginModal} 
-            onClose={() => setShowLoginModal(false)} 
-            onLogin={(pass) => {
-              if (pass === 'admin123') {
-                setIsAdminLoggedIn(true);
-                localStorage.setItem('athletic_admin_auth', 'true');
-                setShowLoginModal(false);
-                return true;
-              }
-              return false;
-            }} 
-          />
+          <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => { 
+            if(p === 'admin123') { setIsAdminLoggedIn(true); localStorage.setItem('athletic_admin_auth', 'true'); return true; } 
+            return false; 
+          }} />
         </>
       )}
     </div>
