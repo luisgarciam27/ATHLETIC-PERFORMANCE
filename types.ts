@@ -76,4 +76,11 @@ export type AcademyConfig = {
   socialInstagram: string;
   socialTiktok: string;
   socialWhatsapp: string;
+  yapeNumber: string;
+  yapeName: string;
+  plinNumber: string;
+  plinName: string;
+  bcpAccount: string;
+  bcpCCI: string;
+  bcpName: string;
 };

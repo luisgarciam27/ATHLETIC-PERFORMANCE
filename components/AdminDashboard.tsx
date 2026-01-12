@@ -6,7 +6,7 @@ import {
   LayoutDashboard, DollarSign, AlertCircle, 
   Zap, Phone, Trash, Edit,
   Save, Image as ImageIcon, Wallet, ListChecks, Plus,
-  Settings, MessageCircle, History, Check, Calendar, PlusCircle, Link as LinkIcon
+  Settings, MessageCircle, History, Check, Calendar, PlusCircle, CreditCard, Banknote
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RegistrationForm } from './RegistrationForm';
@@ -86,24 +86,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  const updateList = (key: keyof AcademyConfig, index: number, value: any) => {
-    const list = [...(localConfig[key] as any[])];
-    list[index] = value;
-    setLocalConfig({ ...localConfig, [key]: list });
-  };
-
-  const removeFromList = (key: keyof AcademyConfig, index: number) => {
-    const list = [...(localConfig[key] as any[])];
-    list.splice(index, 1);
-    setLocalConfig({ ...localConfig, [key]: list });
-  };
-
-  const addToList = (key: keyof AcademyConfig, defaultValue: any) => {
-    const list = [...(localConfig[key] as any[])];
-    list.push(defaultValue);
-    setLocalConfig({ ...localConfig, [key]: list });
-  };
-
   const labelClasses = "block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1";
   const inputClasses = "w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-bold transition-all shadow-inner";
 
@@ -114,15 +96,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 blur-[80px] rounded-full -mr-16 -mt-16"></div>
         <div className="mb-12 flex items-center gap-4 px-2 relative z-10">
           <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg"><Zap className="text-white fill-white" size={28} /></div>
-          <div><span className="font-black text-xl tracking-tighter uppercase leading-none block">ATHLETIC</span><span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">Admin v2.5</span></div>
+          <div><span className="font-black text-xl tracking-tighter uppercase leading-none block">ATHLETIC</span><span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">Admin v2.6</span></div>
         </div>
         <nav className="space-y-2 flex-grow relative z-10">
           {[
-            { id: 'overview', icon: LayoutDashboard, label: 'Dashboard' },
+            { id: 'overview', icon: LayoutDashboard, label: 'Resumen' },
             { id: 'students', icon: Users, label: 'Atletas & Pagos' },
             { id: 'schedules', icon: ListChecks, label: 'Ciclos & Fechas' },
-            { id: 'content', icon: ImageIcon, label: 'Carrusel & Historias' },
-            { id: 'settings', icon: Settings, label: 'Redes & Datos' }
+            { id: 'content', icon: ImageIcon, label: 'Contenidos Web' },
+            { id: 'settings', icon: Settings, label: 'Configuración' }
           ].map((item) => (
             <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-bold text-sm transition-all ${activeTab === item.id ? 'bg-white text-slate-900 shadow-xl scale-105' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
               <item.icon size={20}/> {item.label}
@@ -135,11 +117,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {/* MAIN CONTENT */}
       <main className="flex-grow overflow-y-auto p-12 bg-slate-50 relative">
         <header className="flex justify-between items-end mb-16">
-          <div><p className="text-blue-600 font-black text-[10px] uppercase tracking-[0.3em] mb-2">Administrador</p><h1 className="text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">{activeTab === 'overview' ? 'Resumen' : activeTab === 'content' ? 'Contenidos' : activeTab}</h1></div>
+          <div><p className="text-blue-600 font-black text-[10px] uppercase tracking-[0.3em] mb-2">Administrador</p><h1 className="text-5xl font-black uppercase tracking-tighter text-slate-900 leading-none">{activeTab}</h1></div>
           {(activeTab !== 'overview' && activeTab !== 'students') && (
             <button onClick={async () => {
               const ok = activeTab === 'schedules' ? await onUpdateSchedules(localSchedules) : await onUpdateConfig(localConfig);
-              if (ok) alert('Sitio Web actualizado.');
+              if (ok) alert('Sitio Web actualizado correctamente.');
             }} className="flex items-center gap-4 px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-2xl hover:bg-blue-700 transition-all active:scale-95"><Save size={24}/> Publicar Cambios</button>
           )}
         </header>
@@ -163,7 +145,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
               <div className="flex flex-col md:flex-row items-center gap-6 bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100">
                 <div className="relative flex-grow"><Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={24}/><input type="text" placeholder="Buscar alumno..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-16 pr-8 py-4 bg-slate-50 rounded-2xl outline-none font-bold text-sm"/></div>
-                <button onClick={() => setShowRegisterModal(true)} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 active:scale-95"><Plus size={20}/> Matrícula Admin</button>
+                <button onClick={() => setShowRegisterModal(true)} className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 active:scale-95"><Plus size={20}/> Registro Manual</button>
               </div>
               <div className="bg-white rounded-[3rem] shadow-sm overflow-hidden border border-slate-100">
                 <table className="w-full text-left">
@@ -207,45 +189,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </motion.div>
           )}
 
-          {activeTab === 'content' && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-32">
-              <div className="bg-white p-12 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
-                <div className="flex justify-between items-center"><h3 className="font-black text-slate-900 uppercase italic text-xl">Imágenes Hero (Carrusel)</h3><button onClick={() => addToList('heroImages', '')} className="flex items-center gap-2 text-blue-600 font-black text-xs uppercase"><PlusCircle size={20}/> Añadir Imagen</button></div>
-                <div className="grid gap-4">{localConfig.heroImages.map((url, i) => (
-                  <div key={i} className="flex gap-4 items-center"><span className="text-[10px] font-black text-slate-300">#{i+1}</span><input value={url} onChange={e => updateList('heroImages', i, e.target.value)} className={inputClasses} placeholder="URL de imagen..."/><button onClick={() => removeFromList('heroImages', i)} className="p-4 text-rose-400"><Trash size={20}/></button></div>
-                ))}</div>
-              </div>
-
-              <div className="bg-white p-12 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
-                <div className="flex justify-between items-center"><h3 className="font-black text-slate-900 uppercase italic text-xl">Fotos Sección "Nosotros"</h3><button onClick={() => addToList('aboutImages', '')} className="flex items-center gap-2 text-blue-600 font-black text-xs uppercase"><PlusCircle size={20}/> Añadir Foto</button></div>
-                <div className="grid md:grid-cols-2 gap-6">{localConfig.aboutImages.map((url, i) => (
-                  <div key={i} className="flex gap-4 items-center"><input value={url} onChange={e => updateList('aboutImages', i, e.target.value)} className={inputClasses} placeholder="URL de imagen..."/><button onClick={() => removeFromList('aboutImages', i)} className="p-4 text-rose-400"><Trash size={20}/></button></div>
-                ))}</div>
-              </div>
-
-              <div className="bg-white p-12 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
-                <div className="flex justify-between items-center"><h3 className="font-black text-slate-900 uppercase italic text-xl">Slides de la Intro</h3><button onClick={() => addToList('introSlides', { id: Math.random().toString(), type: 'image', url: '', title: 'NUEVO', subtitle: 'SLIDE', duration: 4000 })} className="flex items-center gap-2 text-blue-600 font-black text-xs uppercase"><PlusCircle size={20}/> Añadir Slide</button></div>
-                <div className="grid md:grid-cols-2 gap-8">{localConfig.introSlides.map((slide, i) => (
-                  <div key={slide.id} className="p-6 bg-slate-50 rounded-3xl border space-y-4">
-                    <div className="flex justify-between"><div><label className={labelClasses}>Título</label><input value={slide.title} onChange={e => { const list = [...localConfig.introSlides]; list[i].title = e.target.value; setLocalConfig({...localConfig, introSlides: list})}} className={inputClasses}/></div><button onClick={() => removeFromList('introSlides', i)} className="text-rose-400"><Trash size={20}/></button></div>
-                    <div><label className={labelClasses}>URL Multimedia</label><input value={slide.url} onChange={e => { const list = [...localConfig.introSlides]; list[i].url = e.target.value; setLocalConfig({...localConfig, introSlides: list})}} className={inputClasses}/></div>
-                  </div>
-                ))}</div>
-              </div>
-            </motion.div>
-          )}
-
           {activeTab === 'settings' && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 pb-32">
               <div className="bg-white p-12 rounded-[3rem] shadow-sm border border-slate-100 grid md:grid-cols-2 gap-8">
-                <div className="md:col-span-2"><h3 className="font-black text-slate-900 uppercase italic tracking-tighter text-xl">Datos de Contacto & Redes</h3></div>
-                <div><label className={labelClasses}>Celular WhatsApp (9 dígitos)</label><input value={localConfig.socialWhatsapp} onChange={e => setLocalConfig({...localConfig, socialWhatsapp: e.target.value})} className={inputClasses} placeholder="999888777"/></div>
-                <div><label className={labelClasses}>Instagram Link</label><input value={localConfig.socialInstagram} onChange={e => setLocalConfig({...localConfig, socialInstagram: e.target.value})} className={inputClasses}/></div>
-                <div><label className={labelClasses}>TikTok Link</label><input value={localConfig.socialTiktok} onChange={e => setLocalConfig({...localConfig, socialTiktok: e.target.value})} className={inputClasses}/></div>
-                <div><label className={labelClasses}>Facebook Link</label><input value={localConfig.socialFacebook} onChange={e => setLocalConfig({...localConfig, socialFacebook: e.target.value})} className={inputClasses}/></div>
-                <div><label className={labelClasses}>Email Institucional</label><input value={localConfig.contactEmail} onChange={e => setLocalConfig({...localConfig, contactEmail: e.target.value})} className={inputClasses}/></div>
-                <div><label className={labelClasses}>Dirección Principal</label><input value={localConfig.contactAddress} onChange={e => setLocalConfig({...localConfig, contactAddress: e.target.value})} className={inputClasses}/></div>
-                <div className="md:col-span-2"><label className={labelClasses}>URL Logo (Transparente)</label><input value={localConfig.logoUrl} onChange={e => setLocalConfig({...localConfig, logoUrl: e.target.value})} className={inputClasses}/></div>
+                <div className="md:col-span-2 flex items-center gap-4"><Settings className="text-blue-600"/><h3 className="font-black text-slate-900 uppercase italic tracking-tighter text-xl">Configuración General</h3></div>
+                <div><label className={labelClasses}>WhatsApp Oficial</label><input value={localConfig.socialWhatsapp} onChange={e => setLocalConfig({...localConfig, socialWhatsapp: e.target.value})} className={inputClasses}/></div>
+                <div><label className={labelClasses}>Dirección Academia</label><input value={localConfig.contactAddress} onChange={e => setLocalConfig({...localConfig, contactAddress: e.target.value})} className={inputClasses}/></div>
+              </div>
+
+              <div className="bg-white p-12 rounded-[3rem] shadow-sm border border-slate-100 grid md:grid-cols-2 gap-8">
+                <div className="md:col-span-2 flex items-center gap-4 text-emerald-600"><CreditCard/><h3 className="font-black text-slate-900 uppercase italic tracking-tighter text-xl">Métodos de Pago (Visible en Web)</h3></div>
+                <div><label className={labelClasses}>Número Yape</label><input value={localConfig.yapeNumber} onChange={e => setLocalConfig({...localConfig, yapeNumber: e.target.value})} className={inputClasses} placeholder="999888777"/></div>
+                <div><label className={labelClasses}>Titular Yape</label><input value={localConfig.yapeName} onChange={e => setLocalConfig({...localConfig, yapeName: e.target.value})} className={inputClasses}/></div>
+                <div className="md:col-span-2 h-[1px] bg-slate-100"></div>
+                <div><label className={labelClasses}>N° Cuenta BCP</label><input value={localConfig.bcpAccount} onChange={e => setLocalConfig({...localConfig, bcpAccount: e.target.value})} className={inputClasses}/></div>
+                <div><label className={labelClasses}>CCI BCP</label><input value={localConfig.bcpCCI} onChange={e => setLocalConfig({...localConfig, bcpCCI: e.target.value})} className={inputClasses}/></div>
+                <div><label className={labelClasses}>Titular Cuenta BCP</label><input value={localConfig.bcpName} onChange={e => setLocalConfig({...localConfig, bcpName: e.target.value})} className={inputClasses}/></div>
+              </div>
+
+              <div className="bg-white p-12 rounded-[3rem] shadow-sm border border-slate-100 grid md:grid-cols-2 gap-8 opacity-60">
+                <div className="md:col-span-2 flex items-center gap-4 text-slate-400"><Banknote/><h3 className="font-black text-slate-900 uppercase italic tracking-tighter text-xl">Datos Plin (Solo para Admin)</h3></div>
+                <div><label className={labelClasses}>Número Plin</label><input value={localConfig.plinNumber} onChange={e => setLocalConfig({...localConfig, plinNumber: e.target.value})} className={inputClasses} placeholder="999888777"/></div>
+                <div><label className={labelClasses}>Titular Plin</label><input value={localConfig.plinName} onChange={e => setLocalConfig({...localConfig, plinName: e.target.value})} className={inputClasses}/></div>
               </div>
             </motion.div>
           )}
@@ -259,33 +224,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPaymentStudent(null)} className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"/>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[3rem] p-12 shadow-2xl border border-emerald-100">
                <button onClick={() => setPaymentStudent(null)} className="absolute top-8 right-8 text-slate-300 hover:text-slate-900"><X size={28}/></button>
-               <h3 className="text-3xl font-black uppercase tracking-tighter italic mb-8">NUEVO PAGO</h3>
+               <h3 className="text-3xl font-black uppercase tracking-tighter italic mb-8">NUEVA TRANSACCIÓN</h3>
                <p className="text-slate-500 font-bold mb-8 uppercase text-[10px] tracking-widest bg-slate-50 p-4 rounded-xl">Atleta: {paymentStudent.firstName} {paymentStudent.lastName}</p>
                <form onSubmit={handleRegisterPayment} className="space-y-6">
-                  <div><label className={labelClasses}>Monto a Cobrar S/</label><input required name="amount" type="number" defaultValue={paymentStudent.pending_balance} className={inputClasses}/></div>
-                  <div><label className={labelClasses}>Concepto</label><input required name="concept" defaultValue="Mensualidad Ciclo 2026" className={inputClasses}/></div>
-                  <div><label className={labelClasses}>Canal</label><select name="method" className={inputClasses}><option value="Yape">Yape</option><option value="Plin">Plin</option><option value="Efectivo">Efectivo</option><option value="BCP">BCP Transferencia</option></select></div>
-                  <button type="submit" className="w-full py-5 bg-emerald-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-emerald-700 transition-all">Registrar Transacción</button>
+                  <div><label className={labelClasses}>Monto Recibido S/</label><input required name="amount" type="number" defaultValue={paymentStudent.pending_balance} className={inputClasses}/></div>
+                  <div><label className={labelClasses}>Concepto</label><input required name="concept" defaultValue="Mensualidad" className={inputClasses}/></div>
+                  <div><label className={labelClasses}>Método Utilizado</label>
+                    <select name="method" className={inputClasses}>
+                      <option value="Yape">Yape</option>
+                      <option value="Plin">Plin</option>
+                      <option value="BCP">BCP Transferencia</option>
+                      <option value="Efectivo">Efectivo / Presencial</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="w-full py-5 bg-emerald-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-emerald-700 transition-all">Confirmar Ingreso</button>
                </form>
-            </motion.div>
-          </div>
-        )}
-
-        {historyStudent && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setHistoryStudent(null)} className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"/>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-2xl bg-white rounded-[3rem] p-12 shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-               <button onClick={() => setHistoryStudent(null)} className="absolute top-8 right-8 text-slate-300 hover:text-slate-900"><X size={28}/></button>
-               <h3 className="text-3xl font-black uppercase tracking-tighter italic mb-8 italic">MOVIMIENTOS DE PAGO</h3>
-               <p className="text-slate-500 font-bold mb-8 uppercase text-[10px] tracking-widest bg-slate-50 p-4 rounded-xl">Atleta: {historyStudent.firstName} {historyStudent.lastName}</p>
-               <div className="flex-grow overflow-y-auto space-y-4 pr-2">
-                 {paymentHistory.length > 0 ? paymentHistory.map(p => (
-                   <div key={p.id} className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center group">
-                     <div><p className="font-black text-slate-900 uppercase text-xl">S/ {p.amount}</p><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(p.payment_date).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })} • {p.method}</p></div>
-                     <span className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl font-black text-[9px] uppercase tracking-widest">PAGO VÁLIDO</span>
-                   </div>
-                 )) : <p className="text-center py-20 text-slate-400 font-bold uppercase tracking-widest">Sin registros de pago.</p>}
-               </div>
             </motion.div>
           </div>
         )}

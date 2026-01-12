@@ -36,7 +36,14 @@ const DEFAULT_CONFIG: AcademyConfig = {
   socialFacebook: "https://facebook.com/athleticlima",
   socialInstagram: "https://instagram.com/athleticlima",
   socialTiktok: "https://tiktok.com/@athleticlima",
-  socialWhatsapp: "900000000"
+  socialWhatsapp: "900000000",
+  yapeNumber: "900000000",
+  yapeName: "ACADEMIA ATHLETIC",
+  plinNumber: "900000000",
+  plinName: "ACADEMIA ATHLETIC",
+  bcpAccount: "191-XXXXXXXX-0-XX",
+  bcpCCI: "002-191-XXXXXXXXXXXX-XX",
+  bcpName: "ATHLETIC PERFORMANCE SAC"
 };
 
 const App: React.FC = () => {
@@ -81,7 +88,14 @@ const App: React.FC = () => {
           heroImages: cloudConfig.hero_images || prev.heroImages,
           aboutImages: cloudConfig.about_images || prev.aboutImages,
           introSlides: cloudConfig.intro_slides || prev.introSlides,
-          staffStories: cloudConfig.staff_stories || prev.staffStories
+          staffStories: cloudConfig.staff_stories || prev.staffStories,
+          yapeNumber: cloudConfig.yape_number || prev.yapeNumber,
+          yapeName: cloudConfig.yape_name || prev.yapeName,
+          plinNumber: cloudConfig.plin_number || prev.plinNumber,
+          plinName: cloudConfig.plin_name || prev.plinName,
+          bcpAccount: cloudConfig.bcp_account || prev.bcpAccount,
+          bcpCCI: cloudConfig.bcp_cci || prev.bcpCCI,
+          bcpName: cloudConfig.bcp_name || prev.bcpName
         }));
       }
     } catch (e) {
@@ -160,7 +174,14 @@ const App: React.FC = () => {
       social_tiktok: newConfig.socialTiktok,
       social_whatsapp: newConfig.socialWhatsapp,
       intro_slides: newConfig.introSlides,
-      staff_stories: newConfig.staffStories
+      staff_stories: newConfig.staffStories,
+      yape_number: newConfig.yapeNumber,
+      yape_name: newConfig.yapeName,
+      plin_number: newConfig.plinNumber,
+      plin_name: newConfig.plinName,
+      bcp_account: newConfig.bcpAccount,
+      bcp_cci: newConfig.bcpCCI,
+      bcp_name: newConfig.bcpName
     });
     if (result && !result.error) { 
       setConfig(newConfig); 
@@ -172,11 +193,10 @@ const App: React.FC = () => {
   if (isLoading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-white">
       <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-      <p className="text-slate-400 font-black text-[10px] tracking-widest uppercase">Iniciando Athletic...</p>
+      <p className="text-slate-400 font-black text-[10px] tracking-widest uppercase">Cargando...</p>
     </div>
   );
 
-  // MODO ADMIN LOGUEADO
   if (isAdminLoggedIn) {
     return (
       <AdminDashboard 
@@ -196,7 +216,6 @@ const App: React.FC = () => {
     );
   }
 
-  // MODO LANDING NORMAL
   return (
     <div className="font-ubuntu">
       {showIntro ? (
@@ -231,5 +250,4 @@ const App: React.FC = () => {
   );
 };
 
-// Fix: Added default export for App component
 export default App;
