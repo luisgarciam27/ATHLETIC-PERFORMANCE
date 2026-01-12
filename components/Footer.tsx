@@ -10,8 +10,8 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
   const handleWhatsAppRedirect = () => {
-    const num = (config.socialWhatsapp || '51900000000').replace(/\D/g, '');
-    window.open(`https://wa.me/${num}?text=Hola!%20Deseo%20información%20sobre%20la%20academia%20Athletic.`, '_blank');
+    const num = (config.socialWhatsapp || '900000000').replace(/\D/g, '');
+    window.open(`https://wa.me/51${num}?text=Hola!%20Deseo%20información%20sobre%20la%20academia%20Athletic.`, '_blank');
   };
 
   return (
@@ -36,15 +36,21 @@ export const Footer: React.FC<FooterProps> = ({ config, onAdminClick }) => {
               {config.welcomeMessage || "Formando a las próximas leyendas del fútbol con metodología profesional en Lima."}
             </p>
             <div className="flex gap-5">
-              <a href={config.socialFacebook || "https://facebook.com"} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm hover:scale-110">
-                <Facebook size={26} />
-              </a>
-              <a href={config.socialInstagram || "https://instagram.com"} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-pink-50 flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white transition-all border border-pink-100 shadow-sm hover:scale-110">
-                <Instagram size={26} />
-              </a>
-              <a href={config.socialTiktok || "https://tiktok.com"} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-900 hover:bg-slate-900 hover:text-white transition-all border border-slate-200 shadow-sm hover:scale-110">
-                <Music2 size={26} />
-              </a>
+              {config.socialFacebook && (
+                <a href={config.socialFacebook} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-all border border-blue-100 shadow-sm hover:scale-110">
+                  <Facebook size={26} />
+                </a>
+              )}
+              {config.socialInstagram && (
+                <a href={config.socialInstagram} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-pink-50 flex items-center justify-center text-pink-600 hover:bg-pink-600 hover:text-white transition-all border border-pink-100 shadow-sm hover:scale-110">
+                  <Instagram size={26} />
+                </a>
+              )}
+              {config.socialTiktok && (
+                <a href={config.socialTiktok} target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-900 hover:bg-slate-900 hover:text-white transition-all border border-slate-200 shadow-sm hover:scale-110">
+                  <Music2 size={26} />
+                </a>
+              )}
               <button 
                 onClick={handleWhatsAppRedirect} 
                 className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-sm hover:scale-110"

@@ -52,29 +52,35 @@ const App: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      // 1. Cargar Alumnos
+      // 1. Cargar Alumnos con mapeo seguro
       const studentsRes: any = await supabaseFetch('GET', 'students');
       if (studentsRes && Array.isArray(studentsRes)) {
         setStudents(studentsRes.map(s => ({
           id: s.id,
-          firstName: s.first_name,
-          lastName: s.last_name,
-          birthDate: s.birth_date,
-          parentName: s.parent_name,
-          parentPhone: s.parent_phone,
-          address: s.address,
-          category: s.category,
-          scheduleId: s.schedule_id,
+          firstName: s.first_name || '',
+          lastName: s.last_name || '',
+          birthDate: s.birth_date || '',
+          parentName: s.parent_name || '',
+          parentPhone: s.parent_phone || '',
+          address: s.address || '',
+          category: s.category || '',
+          scheduleId: s.schedule_id || '',
           paymentStatus: s.payment_status || 'Pending',
-          pending_balance: s.pending_balance || 0,
-          total_paid: s.total_paid || 0,
+          pending_balance: Number(s.pending_balance) || 0,
+          total_paid: Number(s.total_paid) || 0,
           modality: s.modality || 'Mensual Regular',
-          qrCode: s.qr_code,
+          qrCode: s.qr_code || '',
           registrationDate: s.registration_date || s.created_at
         })));
       }
 
-      // 2. Cargar Configuración
+      // 2. Cargar Horarios (Si falla, usa estáticos)
+      const schedulesRes: any = await supabaseFetch('GET', 'schedules');
+      if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
+        setSchedules(schedulesRes);
+      }
+
+      // 3. Cargar Configuración con mapeo de redes sociales
       const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
       if (cloudConfig && !cloudConfig.error) {
         setConfig(prev => ({
@@ -102,7 +108,7 @@ const App: React.FC = () => {
         }));
       }
     } catch (e) {
-      console.error("Error al sincronizar con Supabase:", e);
+      console.error("Error crítico de sincronización:", e);
     }
   };
 
@@ -115,7 +121,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleRegister = async (newStudent: Student) => {
-    // MAPEAMOS A NOMBRES DE COLUMNA DE SUPABASE (snake_case)
+    // Mapeo exhaustivo a snake_case para Supabase
     const payload = {
       first_name: newStudent.firstName,
       last_name: newStudent.lastName,
@@ -135,9 +141,10 @@ const App: React.FC = () => {
 
     const result = await supabaseFetch('POST', 'students', payload);
     if (result && !result.error) {
-      await fetchData(); // Recargar datos
+      await fetchData();
       return true;
     }
+    console.error("Error al registrar:", result?.error);
     return false;
   };
 
@@ -185,10 +192,10 @@ const App: React.FC = () => {
   };
 
   if (isLoading) return (
-    <div className="h-screen flex items-center justify-center bg-slate-900">
+    <div className="h-screen flex items-center justify-center bg-slate-900 font-ubuntu">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-white font-black uppercase tracking-[0.3em] text-xs">Cargando Athletic Academy...</p>
+        <div className="w-20 h-20 border-t-4 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-6"></div>
+        <p className="text-white font-black uppercase tracking-[0.4em] text-xs">Sincronizando Athletic Academy...</p>
       </div>
     </div>
   );
@@ -200,7 +207,11 @@ const App: React.FC = () => {
         schedules={schedules} 
         config={config} 
         onUpdateConfig={handleUpdateConfig} 
-        onUpdateSchedules={async (s) => true}
+        onUpdateSchedules={async (s) => {
+          // Guardar horarios uno a uno o como array si tienes la lógica
+          setSchedules(s);
+          return true;
+        }}
         onRegister={handleRegister} 
         onUpdateStudent={async (s) => { await fetchData(); return true; }} 
         onDelete={handleDeleteStudent} 
