@@ -48,28 +48,6 @@ export const SCHEDULES: ClassSchedule[] = [
     price: 250,
     objective: 'Preparación física de alta exigencia y especialización táctica.',
     color: '#f43f5e' // Rose
-  },
-  {
-    id: 'formativo-competitivo-mjs',
-    category: 'Formativo–Competitivo',
-    age: 'Cats: 2013, 2014, 2015',
-    days: ['Martes', 'Jueves', 'Sábado'],
-    time: '4:00 PM – 5:30 PM',
-    duration: '90 min',
-    price: 220,
-    objective: 'Transición a competencia real y fundamentos tácticos.',
-    color: '#8b5cf6' // Purple
-  },
-  {
-    id: 'formativo-competitivo-avanzado-mjs',
-    category: 'Formativo–Competitivo Avanzado',
-    age: 'Cats: 2012, 2011, 2010',
-    days: ['Martes', 'Jueves', 'Sábado'],
-    time: '5:30 PM – 7:00 PM',
-    duration: '90 min',
-    price: 240,
-    objective: 'Alto nivel técnico y competencia de alto rendimiento.',
-    color: '#f97316' // Orange
   }
 ];
 

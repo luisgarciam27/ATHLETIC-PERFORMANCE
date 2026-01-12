@@ -25,16 +25,18 @@ const DEFAULT_CONFIG: AcademyConfig = {
   welcomeMessage: "Inscripciones abiertas 2026. Únete a la familia Athletic Performance.",
   introSlides: [
     { id: '1', type: 'image', url: 'https://images.unsplash.com/photo-1510566337590-2fc1f21d0faa?q=80&w=2070', title: 'ATHLETIC', subtitle: 'PERFORMANCE', duration: 4000 },
-    { id: '2', type: 'image', url: 'https://images.unsplash.com/photo-1526232386154-75127e4dd0a8?q=80&w=2070', title: 'FORMACIÓN', subtitle: 'DE ÉLITE', duration: 4000 }
+    { id: '2', type: 'image', url: 'https://images.unsplash.com/photo-1526232386154-75127e4dd0a8?q=80&w=800', title: 'FORMACIÓN', subtitle: 'DE ÉLITE', duration: 4000 }
   ],
-  staffStories: [],
+  staffStories: [
+    { id: 's1', type: 'video', url: 'https://cdn.pixabay.com/video/2021/04/12/70860-537442186_large.mp4', name: 'Carlos Ruíz', role: 'Director Técnico', duration: 10000 }
+  ],
   contactPhone: "+51 900 000 000",
   contactEmail: "hola@athletic.pe",
   contactAddress: "Sede Principal, Lima",
-  socialFacebook: "https://facebook.com",
-  socialInstagram: "https://instagram.com",
-  socialTiktok: "https://tiktok.com",
-  socialWhatsapp: "51900000000"
+  socialFacebook: "https://facebook.com/athleticlima",
+  socialInstagram: "https://instagram.com/athleticlima",
+  socialTiktok: "https://tiktok.com/@athleticlima",
+  socialWhatsapp: "900000000"
 };
 
 const App: React.FC = () => {
@@ -43,7 +45,7 @@ const App: React.FC = () => {
   const [config, setConfig] = useState<AcademyConfig>(DEFAULT_CONFIG);
   const [showIntro, setShowIntro] = useState<boolean>(true);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
-  const [isAdminRoute, setIsAdminRoute] = useState<boolean>(false);
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
@@ -63,23 +65,24 @@ const App: React.FC = () => {
 
       const schedulesRes: any = await supabaseFetch('GET', 'schedules');
       if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
-        setSchedules(schedulesRes.map(s => ({ ...s, days: Array.isArray(s.days) ? s.days : [] })));
+        setSchedules(schedulesRes.map(s => ({ ...s, days: Array.isArray(s.days) ? s.days : [], startDate: s.start_date, endDate: s.end_date })));
       }
 
       const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
       if (cloudConfig && !cloudConfig.error) {
-        setConfig({
-          ...DEFAULT_CONFIG,
+        setConfig(prev => ({
+          ...prev,
           ...cloudConfig,
-          logoUrl: cloudConfig.logo_url || DEFAULT_CONFIG.logoUrl,
-          heroImages: cloudConfig.hero_images || DEFAULT_CONFIG.heroImages,
-          aboutImages: cloudConfig.about_images || DEFAULT_CONFIG.aboutImages,
-          socialWhatsapp: cloudConfig.social_whatsapp || DEFAULT_CONFIG.socialWhatsapp,
-          introSlides: cloudConfig.intro_slides || DEFAULT_CONFIG.introSlides,
-          socialFacebook: cloudConfig.social_facebook || DEFAULT_CONFIG.socialFacebook,
-          socialInstagram: cloudConfig.social_instagram || DEFAULT_CONFIG.socialInstagram,
-          socialTiktok: cloudConfig.social_tiktok || DEFAULT_CONFIG.socialTiktok
-        });
+          socialFacebook: cloudConfig.social_facebook || cloudConfig.socialFacebook || prev.socialFacebook,
+          socialInstagram: cloudConfig.social_instagram || cloudConfig.socialInstagram || prev.socialInstagram,
+          socialTiktok: cloudConfig.social_tiktok || cloudConfig.socialTiktok || prev.socialTiktok,
+          socialWhatsapp: cloudConfig.social_whatsapp || cloudConfig.socialWhatsapp || prev.socialWhatsapp,
+          logoUrl: cloudConfig.logo_url || prev.logoUrl,
+          heroImages: cloudConfig.hero_images || prev.heroImages,
+          aboutImages: cloudConfig.about_images || prev.aboutImages,
+          introSlides: cloudConfig.intro_slides || prev.introSlides,
+          staffStories: cloudConfig.staff_stories || prev.staffStories
+        }));
       }
     } catch (e) {
       console.error("Error loading data", e);
@@ -87,29 +90,17 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const handleHash = () => {
-      const isDashboard = window.location.hash === '#dashboard';
-      setIsAdminRoute(isDashboard);
-      
-      const auth = localStorage.getItem('athletic_admin_auth');
-      if (auth === 'true' && isDashboard) {
-        setIsAdminLoggedIn(true);
-      }
-    };
-
     fetchData().finally(() => {
-      handleHash();
+      const auth = localStorage.getItem('athletic_admin_auth');
+      if (auth === 'true') setIsAdminLoggedIn(true);
       setIsLoading(false);
     });
-
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
   const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {
     setSchedules(newSchedules);
     for (const s of newSchedules) {
-      await supabaseFetch('POST', 'schedules', { ...s, id: s.id, days: s.days || [] });
+      await supabaseFetch('POST', 'schedules', { ...s, id: s.id, days: s.days || [], start_date: s.startDate, end_date: s.endDate });
     }
     return true;
   };
@@ -144,7 +135,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm('¿ELIMINAR ALUMNO?')) return;
+    if (!window.confirm('¿ELIMINAR ALUMNO DEFINITIVAMENTE?')) return;
     await supabaseFetch('DELETE', 'payments', null, `student_id=eq.${id}`);
     const result = await supabaseFetch('DELETE', 'students', { id });
     if (result !== null && !result?.error) {
@@ -156,60 +147,89 @@ const App: React.FC = () => {
 
   const handleUpdateConfig = async (newConfig: AcademyConfig) => {
     const result = await supabaseFetch('PATCH', 'academy_config', {
-      id: 1, logo_url: newConfig.logoUrl, hero_images: newConfig.heroImages,
-      about_images: newConfig.aboutImages, welcome_message: newConfig.welcomeMessage,
-      contact_phone: newConfig.contactPhone, contact_email: newConfig.contactEmail,
-      contact_address: newConfig.contactAddress, social_facebook: newConfig.socialFacebook,
-      social_instagram: newConfig.socialInstagram, social_tiktok: newConfig.socialTiktok,
-      social_whatsapp: newConfig.socialWhatsapp
+      id: 1, 
+      logo_url: newConfig.logoUrl, 
+      hero_images: newConfig.heroImages,
+      about_images: newConfig.aboutImages, 
+      welcome_message: newConfig.welcomeMessage,
+      contact_phone: newConfig.contactPhone, 
+      contact_email: newConfig.contactEmail,
+      contact_address: newConfig.contactAddress, 
+      social_facebook: newConfig.socialFacebook,
+      social_instagram: newConfig.socialInstagram, 
+      social_tiktok: newConfig.socialTiktok,
+      social_whatsapp: newConfig.socialWhatsapp,
+      intro_slides: newConfig.introSlides,
+      staff_stories: newConfig.staffStories
     });
-    if (result && !result.error) { setConfig(newConfig); return true; }
+    if (result && !result.error) { 
+      setConfig(newConfig); 
+      return true; 
+    }
     return false;
   };
 
-  if (isLoading) return <div className="h-screen flex items-center justify-center bg-white text-slate-900 font-bold uppercase text-[10px] tracking-widest animate-pulse">Cargando Academia...</div>;
+  if (isLoading) return (
+    <div className="h-screen flex flex-col items-center justify-center bg-white">
+      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+      <p className="text-slate-400 font-black text-[10px] tracking-widest uppercase">Iniciando Athletic...</p>
+    </div>
+  );
 
-  // RUTA SECRETA DE ADMIN (Solo si hay #dashboard en la URL)
-  if (isAdminRoute) {
-    if (!isAdminLoggedIn) {
-      return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
-          <LoginModal 
-            isOpen={true} 
-            onClose={() => { window.location.hash = ''; setIsAdminRoute(false); }} 
-            onLogin={(p) => { if(p === 'admin123') { setIsAdminLoggedIn(true); localStorage.setItem('athletic_admin_auth', 'true'); return true; } return false; }} 
-          />
-        </div>
-      );
-    }
+  // MODO ADMIN LOGUEADO
+  if (isAdminLoggedIn) {
     return (
       <AdminDashboard 
-        students={students} schedules={schedules} config={config} 
-        onUpdateConfig={handleUpdateConfig} onUpdateSchedules={handleUpdateSchedules}
-        onRegister={handleRegister} onUpdateStudent={handleUpdateStudent} 
-        onDelete={handleDeleteStudent} onLogout={() => { setIsAdminLoggedIn(false); localStorage.removeItem('athletic_admin_auth'); window.location.hash = ''; }} 
+        students={students} 
+        schedules={schedules} 
+        config={config} 
+        onUpdateConfig={handleUpdateConfig} 
+        onUpdateSchedules={handleUpdateSchedules}
+        onRegister={handleRegister} 
+        onUpdateStudent={handleUpdateStudent} 
+        onDelete={handleDeleteStudent} 
+        onLogout={() => { 
+          setIsAdminLoggedIn(false); 
+          localStorage.removeItem('athletic_admin_auth'); 
+        }} 
       />
     );
   }
 
-  // INTRO ANIMADA (Lo primero que ve el cliente siempre)
-  if (showIntro) {
-    return <IntroPortal slides={config.introSlides} onComplete={() => setShowIntro(false)} />;
-  }
-
-  // LANDING PAGE PRINCIPAL
+  // MODO LANDING NORMAL
   return (
     <div className="font-ubuntu">
-      <Navbar logoUrl={config.logoUrl} onTabChange={() => {}} />
-      <Hero images={config.heroImages} />
-      <About images={config.aboutImages} />
-      <SchedulesSection schedules={schedules} />
-      <section id="register" className="py-24 bg-slate-100">
-        <RegistrationForm config={config} onRegister={handleRegister} />
-      </section>
-      <Footer config={config} onAdminClick={() => { window.location.hash = '#dashboard'; }} />
+      {showIntro ? (
+        <IntroPortal slides={config.introSlides} onComplete={() => setShowIntro(false)} />
+      ) : (
+        <>
+          <Navbar logoUrl={config.logoUrl} onTabChange={() => {}} />
+          <Hero images={config.heroImages} staffStories={config.staffStories} />
+          <About images={config.aboutImages} />
+          <SchedulesSection schedules={schedules} />
+          <section id="register" className="py-24 bg-slate-100">
+            <RegistrationForm config={config} onRegister={handleRegister} />
+          </section>
+          <Footer config={config} onAdminClick={() => setShowLoginModal(true)} />
+          
+          <LoginModal 
+            isOpen={showLoginModal} 
+            onClose={() => setShowLoginModal(false)} 
+            onLogin={(pass) => {
+              if (pass === 'admin123') {
+                setIsAdminLoggedIn(true);
+                localStorage.setItem('athletic_admin_auth', 'true');
+                setShowLoginModal(false);
+                return true;
+              }
+              return false;
+            }} 
+          />
+        </>
+      )}
     </div>
   );
 };
 
+// Fix: Added default export for App component
 export default App;
