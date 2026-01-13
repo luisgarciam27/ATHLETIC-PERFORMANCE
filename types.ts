@@ -13,14 +13,9 @@ export type ClassSchedule = {
   endDate?: string;
 };
 
-export type Payment = {
-  id: string;
-  student_id: string;
-  amount: number;
-  method: 'Yape' | 'Plin' | 'BCP' | 'Efectivo';
-  concept: string;
-  payment_date: string;
-  status: 'valid' | 'cancelled';
+export type AttendanceRecord = {
+  date: string;
+  status: 'present' | 'absent';
 };
 
 export type Student = {
@@ -42,6 +37,7 @@ export type Student = {
   comments?: string;
   pending_balance?: number;
   total_paid?: number;
+  attendance_history?: AttendanceRecord[];
 };
 
 export type IntroSlide = {

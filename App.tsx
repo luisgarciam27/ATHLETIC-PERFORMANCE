@@ -52,7 +52,7 @@ const App: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      // 1. Alumnos - Mapeo fiel al esquema de tablas del usuario
+      // 1. Fetch Students
       const studentsRes: any = await supabaseFetch('GET', 'students');
       if (studentsRes && Array.isArray(studentsRes)) {
         setStudents(studentsRes.map(s => ({
@@ -73,55 +73,43 @@ const App: React.FC = () => {
           nextPaymentDate: s.next_payment_date || '',
           enrollmentPayment: Number(s.enrollment_fee) || 0,
           comments: s.comments || '',
+          attendance_history: Array.isArray(s.attendance_history) ? s.attendance_history : [],
           registrationDate: s.created_at || new Date().toISOString()
         })));
       }
 
-      // 2. Horarios
+      // 2. Fetch Schedules
       const schedulesRes: any = await supabaseFetch('GET', 'schedules');
       if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
         setSchedules(schedulesRes.map(s => ({
           id: s.id,
-          category: s.category,
+          category: s.category || 'Sin Categoría',
           age: s.age || '',
-          days: s.days || [],
+          days: Array.isArray(s.days) ? s.days : [],
           time: s.time || '',
-          duration: '60 min', // Default ya que no está en la tabla
+          duration: s.duration || '60 min',
           price: Number(s.price) || 0,
-          objective: '', // Default ya que no está en la tabla
-          color: s.color || '#3b82f6'
+          objective: s.objective || '',
+          color: s.color || '#3b82f6',
+          startDate: s.start_date || '',
+          endDate: s.end_date || ''
         })));
       }
 
-      // 3. Configuración
+      // 3. Fetch Config (Mapping snake_case to camelCase for Logo)
       const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
       if (cloudConfig && !cloudConfig.error) {
-        setConfig(prev => ({
-          ...prev,
-          logoUrl: cloudConfig.logo_url || prev.logoUrl,
-          heroImages: Array.isArray(cloudConfig.hero_images) ? cloudConfig.hero_images : prev.heroImages,
-          aboutImages: Array.isArray(cloudConfig.about_images) ? cloudConfig.about_images : prev.aboutImages,
-          welcomeMessage: cloudConfig.welcome_message || prev.welcomeMessage,
-          contactPhone: cloudConfig.contact_phone || prev.contactPhone,
-          contactEmail: cloudConfig.contact_email || prev.contactEmail,
-          contactAddress: cloudConfig.contact_address || prev.contactAddress,
-          socialFacebook: cloudConfig.social_facebook || prev.socialFacebook,
-          socialInstagram: cloudConfig.social_instagram || prev.socialInstagram,
-          socialTiktok: cloudConfig.social_tiktok || prev.socialTiktok,
-          socialWhatsapp: cloudConfig.social_whatsapp || prev.socialWhatsapp,
-          yapeNumber: cloudConfig.yape_number || prev.yapeNumber,
-          yapeName: cloudConfig.yape_name || prev.yapeName,
-          plinNumber: cloudConfig.plin_number || prev.plinNumber,
-          plinName: cloudConfig.plin_name || prev.plinName,
-          bcpAccount: cloudConfig.bcp_account || prev.bcpAccount,
-          bcpCCI: cloudConfig.bcp_cci || prev.bcpCCI,
-          bcpName: cloudConfig.bcp_name || prev.bcpName,
-          introSlides: Array.isArray(cloudConfig.intro_slides) ? cloudConfig.intro_slides : prev.introSlides,
-          staffStories: Array.isArray(cloudConfig.staff_stories) ? cloudConfig.staff_stories : prev.staffStories
+        setConfig(prev => ({ 
+          ...prev, 
+          ...cloudConfig,
+          logoUrl: cloudConfig.logo_url || cloudConfig.logoUrl || prev.logoUrl,
+          contactPhone: cloudConfig.contact_phone || cloudConfig.contactPhone || prev.contactPhone,
+          contactEmail: cloudConfig.contact_email || cloudConfig.contactEmail || prev.contactEmail,
+          contactAddress: cloudConfig.contact_address || cloudConfig.contactAddress || prev.contactAddress
         }));
       }
     } catch (e) {
-      console.error("Error cargando datos:", e);
+      console.error("Error loading data:", e);
     }
   };
 
@@ -133,8 +121,41 @@ const App: React.FC = () => {
     });
   }, []);
 
+  const handleUpdateConfig = async (newConfig: AcademyConfig) => {
+    // Sincronizar nombres para Supabase
+    const payload = {
+      id: 1,
+      ...newConfig,
+      logo_url: newConfig.logoUrl,
+      contact_phone: newConfig.contactPhone,
+      contact_email: newConfig.contactEmail,
+      contact_address: newConfig.contactAddress
+    };
+    const result = await supabaseFetch('PATCH', 'academy_config', payload);
+    if (!result?.error) { setConfig(newConfig); return true; }
+    return false;
+  };
+
+  const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {
+    for (const schedule of newSchedules) {
+      const payload = {
+        id: schedule.id,
+        category: schedule.category,
+        age: schedule.age,
+        price: schedule.price,
+        time: schedule.time,
+        days: schedule.days,
+        color: schedule.color,
+        start_date: schedule.startDate || null,
+        end_date: schedule.endDate || null
+      };
+      await supabaseFetch('PATCH', 'schedules', payload);
+    }
+    setSchedules(newSchedules);
+    return true;
+  };
+
   const handleRegister = async (newStudent: Student) => {
-    // MAPEAMOS EXACTAMENTE A LOS NOMBRES DE TUS TABLAS (SNAKE_CASE)
     const payload: any = {
       first_name: newStudent.firstName,
       last_name: newStudent.lastName,
@@ -151,117 +172,69 @@ const App: React.FC = () => {
       enrollment_fee: newStudent.enrollmentPayment || 0,
       pending_balance: newStudent.pending_balance || 0,
       total_paid: newStudent.total_paid || 0,
-      schedule_id: newStudent.scheduleId
+      schedule_id: newStudent.scheduleId,
+      attendance_history: []
     };
-
-    // ELIMINAMOS registration_date PORQUE NO EXISTE EN TU TABLA
-    // Supabase llenará automáticamente created_at
-
     const result = await supabaseFetch('POST', 'students', payload);
-    
-    if (result && !result.error) {
-      await fetchData();
-      return true;
-    }
-    
-    const errorMessage = result?.error?.message || result?.error?.details || 'Error de conexión con la base de datos';
-    console.error("Error detectado en Supabase:", result?.error);
-    
-    throw new Error(errorMessage);
+    if (result && !result.error) { await fetchData(); return true; }
+    return false;
   };
 
-  const handleUpdateConfig = async (newConfig: AcademyConfig) => {
-    const payload = {
-      id: 1,
-      logo_url: newConfig.logoUrl,
-      hero_images: newConfig.heroImages,
-      about_images: newConfig.aboutImages,
-      welcome_message: newConfig.welcomeMessage,
-      contact_phone: newConfig.contactPhone,
-      contact_email: newConfig.contactEmail,
-      contact_address: newConfig.contactAddress,
-      social_facebook: newConfig.socialFacebook,
-      social_instagram: newConfig.socialInstagram,
-      social_tiktok: newConfig.socialTiktok,
-      social_whatsapp: newConfig.socialWhatsapp,
-      yape_number: newConfig.yapeNumber,
-      yape_name: newConfig.yapeName,
-      plin_number: newConfig.plinNumber,
-      plin_name: newConfig.plinName,
-      bcp_account: newConfig.bcpAccount,
-      bcp_cci: newConfig.bcpCCI,
-      bcp_name: newConfig.bcpName,
-      intro_slides: newConfig.introSlides,
-      staff_stories: newConfig.staffStories
+  const handleUpdateStudent = async (student: Student) => {
+    const payload: any = {
+      id: student.id,
+      payment_status: student.paymentStatus,
+      pending_balance: student.pending_balance,
+      total_paid: student.total_paid,
+      attendance_history: student.attendance_history
     };
-
-    const result = await supabaseFetch('PATCH', 'academy_config', payload);
-    if (result && !result.error) {
-      setConfig(newConfig);
-      return true;
-    }
-    return false;
-  };
-
-  const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {
-    setSchedules(newSchedules);
-    return true;
-  };
-
-  const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm('¿ELIMINAR ALUMNO DEFINITIVAMENTE?')) return false;
-    const result = await supabaseFetch('DELETE', 'students', { id });
+    const result = await supabaseFetch('PATCH', 'students', payload);
     if (!result?.error) {
-      setStudents(prev => prev.filter(s => s.id !== id));
+      setStudents(prev => prev.map(s => s.id === student.id ? student : s));
       return true;
     }
     return false;
   };
 
-  if (isLoading) return (
-    <div className="h-screen flex items-center justify-center bg-slate-900">
-      <div className="text-center">
-        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-white font-black uppercase text-[10px] tracking-widest">Cargando Sistema Athletic...</p>
-      </div>
-    </div>
-  );
-
-  if (isAdminLoggedIn) {
-    return (
-      <AdminDashboard 
-        students={students} 
-        schedules={schedules} 
-        config={config} 
-        onUpdateConfig={handleUpdateConfig} 
-        onUpdateSchedules={handleUpdateSchedules}
-        onRegister={handleRegister} 
-        onUpdateStudent={async (s) => { await fetchData(); return true; }} 
-        onDelete={handleDeleteStudent} 
-        onLogout={() => { setIsAdminLoggedIn(false); localStorage.removeItem('athletic_admin_auth'); }} 
-      />
-    );
-  }
+  if (isLoading) return <div className="h-screen flex items-center justify-center bg-slate-900 text-white font-black text-[10px] uppercase tracking-widest">Iniciando Athletic OS...</div>;
 
   return (
     <div className="font-ubuntu">
       {showIntro ? (
         <IntroPortal slides={config.introSlides} onComplete={() => setShowIntro(false)} />
       ) : (
-        <>
-          <Navbar logoUrl={config.logoUrl} onTabChange={() => {}} />
-          <Hero images={config.heroImages} staffStories={config.staffStories} />
-          <About images={config.aboutImages} />
-          <SchedulesSection schedules={schedules} />
-          <section id="register" className="py-24 bg-slate-100">
-            <RegistrationForm config={config} onRegister={handleRegister} />
-          </section>
-          <Footer config={config} onAdminClick={() => setShowLoginModal(true)} />
-          <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => { 
-            if(p === 'admin123') { setIsAdminLoggedIn(true); localStorage.setItem('athletic_admin_auth', 'true'); return true; } 
-            return false; 
-          }} />
-        </>
+        isAdminLoggedIn ? (
+          <AdminDashboard 
+            students={students} 
+            schedules={schedules} 
+            config={config} 
+            onUpdateConfig={handleUpdateConfig} 
+            onUpdateSchedules={handleUpdateSchedules}
+            onRegister={handleRegister} 
+            onUpdateStudent={handleUpdateStudent} 
+            onDelete={async (id) => { 
+              const ok = await supabaseFetch('DELETE', 'students', { id });
+              if(!ok.error) setStudents(prev => prev.filter(s => s.id !== id));
+              return !ok.error;
+            }} 
+            onLogout={() => { setIsAdminLoggedIn(false); localStorage.removeItem('athletic_admin_auth'); }} 
+          />
+        ) : (
+          <>
+            <Navbar logoUrl={config.logoUrl} onTabChange={() => {}} />
+            <Hero images={config.heroImages} staffStories={config.staffStories} />
+            <About images={config.aboutImages} />
+            <SchedulesSection schedules={schedules} />
+            <section id="register" className="py-24 bg-slate-100">
+              <RegistrationForm config={config} onRegister={handleRegister} />
+            </section>
+            <Footer config={config} onAdminClick={() => setShowLoginModal(true)} />
+            <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onLogin={(p) => { 
+              if(p === 'admin123') { setIsAdminLoggedIn(true); localStorage.setItem('athletic_admin_auth', 'true'); return true; } 
+              return false; 
+            }} />
+          </>
+        )
       )}
     </div>
   );
