@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Student, AcademyConfig } from '../types';
 import { SCHEDULES } from '../constants';
-import { Send, User, Smartphone, DollarSign, PlusCircle, CheckCircle2, Copy, X, CreditCard, Plus, MapPin, AlertTriangle } from 'lucide-react';
+// Added Landmark to the imported icons
+import { Send, User, Smartphone, DollarSign, PlusCircle, CheckCircle2, Copy, X, CreditCard, Plus, MapPin, AlertTriangle, Landmark } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface RegistrationFormProps {
@@ -207,7 +208,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
         {!isAdminView && showPaymentModal && (
           <div className="fixed inset-0 z-[250] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPaymentModal(false)} className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[4rem] p-12 shadow-2xl">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative w-full max-w-lg bg-white rounded-[4rem] p-12 shadow-2xl overflow-y-auto max-h-[90vh]">
               <button onClick={() => setShowPaymentModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900"><X size={24}/></button>
               <div className="text-center mb-10">
                 <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-blue-600"><DollarSign size={32} /></div>
@@ -216,6 +217,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               </div>
 
               <div className="space-y-4 mb-8">
+                {/* YAPE */}
                 <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex justify-between items-center group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600"><Plus size={20}/></div>
@@ -224,6 +226,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   <button onClick={() => { navigator.clipboard.writeText(config?.yapeNumber || '900000000'); alert('Número copiado'); setHasCopiedAny(true); }} className="w-12 h-12 rounded-2xl bg-white border flex items-center justify-center text-blue-600 shadow-sm hover:bg-blue-600 hover:text-white transition-all"><Copy size={20} /></button>
                 </div>
 
+                {/* BCP */}
                 <div className="bg-emerald-50 p-6 rounded-[2rem] border border-emerald-100 flex justify-between items-center group">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600"><CreditCard size={20}/></div>
@@ -231,6 +234,17 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   </div>
                   <button onClick={() => { navigator.clipboard.writeText(config?.bcpAccount || '191-XXXXXXXX-0-XX'); alert('Cuenta copiada'); setHasCopiedAny(true); }} className="w-12 h-12 rounded-2xl bg-white border flex items-center justify-center text-emerald-600 shadow-sm hover:bg-emerald-600 hover:text-white transition-all"><Copy size={20} /></button>
                 </div>
+
+                {/* INTERBANK - DINÁMICO */}
+                {config?.interbankAccount && (
+                  <div className="bg-orange-50 p-6 rounded-[2rem] border border-orange-100 flex justify-between items-center group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600"><Landmark size={20}/></div>
+                      <div><p className="text-[9px] font-black text-orange-600 uppercase italic leading-none mb-1">Cuenta Interbank</p><p className="font-black text-slate-800 text-sm leading-none mb-1">{config.interbankAccount}</p><p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">{config.interbankName}</p></div>
+                    </div>
+                    <button onClick={() => { navigator.clipboard.writeText(config.interbankAccount!); alert('Cuenta Interbank copiada'); setHasCopiedAny(true); }} className="w-12 h-12 rounded-2xl bg-white border flex items-center justify-center text-orange-600 shadow-sm hover:bg-orange-600 hover:text-white transition-all"><Copy size={20} /></button>
+                  </div>
+                )}
               </div>
               
               <button disabled={!hasCopiedAny || isSubmitting} onClick={finalizeRegistration} className={`w-full py-7 rounded-[2.5rem] font-black text-sm uppercase tracking-widest transition-all shadow-xl active:scale-95 ${hasCopiedAny ? 'bg-slate-900 text-white hover:bg-blue-600' : 'bg-slate-100 text-slate-300'}`}>CONFIRMAR INSCRIPCIÓN</button>

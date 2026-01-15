@@ -79,4 +79,7 @@ export type AcademyConfig = {
   bcpAccount: string;
   bcpCCI: string;
   bcpName: string;
+  interbankAccount: string;
+  interbankCCI: string;
+  interbankName: string;
 };

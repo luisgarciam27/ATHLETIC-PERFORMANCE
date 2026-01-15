@@ -38,7 +38,10 @@ const DEFAULT_CONFIG: AcademyConfig = {
   plinName: "ACADEMIA ATHLETIC",
   bcpAccount: "191-XXXXXXXX-0-XX",
   bcpCCI: "002-191-XXXXXXXXXXXX-XX",
-  bcpName: "ATHLETIC PERFORMANCE"
+  bcpName: "ATHLETIC PERFORMANCE",
+  interbankAccount: "",
+  interbankCCI: "",
+  interbankName: ""
 };
 
 const App: React.FC = () => {
@@ -52,7 +55,7 @@ const App: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      // 1. Fetch Students
+      // 1. Alumnos
       const studentsRes: any = await supabaseFetch('GET', 'students');
       if (studentsRes && Array.isArray(studentsRes)) {
         setStudents(studentsRes.map(s => ({
@@ -78,7 +81,7 @@ const App: React.FC = () => {
         })));
       }
 
-      // 2. Fetch Schedules
+      // 2. Horarios
       const schedulesRes: any = await supabaseFetch('GET', 'schedules');
       if (schedulesRes && Array.isArray(schedulesRes) && schedulesRes.length > 0) {
         setSchedules(schedulesRes.map(s => ({
@@ -96,20 +99,37 @@ const App: React.FC = () => {
         })));
       }
 
-      // 3. Fetch Config (Mapping snake_case to camelCase for Logo)
-      const cloudConfig: any = await supabaseFetch('GET', 'academy_config');
-      if (cloudConfig && !cloudConfig.error) {
-        setConfig(prev => ({ 
-          ...prev, 
-          ...cloudConfig,
-          logoUrl: cloudConfig.logo_url || cloudConfig.logoUrl || prev.logoUrl,
-          contactPhone: cloudConfig.contact_phone || cloudConfig.contactPhone || prev.contactPhone,
-          contactEmail: cloudConfig.contact_email || cloudConfig.contactEmail || prev.contactEmail,
-          contactAddress: cloudConfig.contact_address || cloudConfig.contactAddress || prev.contactAddress
-        }));
+      // 3. Configuración
+      const db: any = await supabaseFetch('GET', 'academy_config');
+      if (db && !db.error) {
+        setConfig({
+          logoUrl: db.logo_url || DEFAULT_CONFIG.logoUrl,
+          heroImages: db.hero_images || DEFAULT_CONFIG.heroImages,
+          aboutImages: db.about_images || DEFAULT_CONFIG.aboutImages,
+          welcomeMessage: db.welcome_message || DEFAULT_CONFIG.welcomeMessage,
+          introSlides: db.intro_slides || DEFAULT_CONFIG.introSlides,
+          staffStories: db.staff_stories || DEFAULT_CONFIG.staffStories,
+          contactPhone: db.contact_phone || DEFAULT_CONFIG.contactPhone,
+          contactEmail: db.contact_email || DEFAULT_CONFIG.contactEmail,
+          contactAddress: db.contact_address || DEFAULT_CONFIG.contactAddress,
+          socialFacebook: db.social_facebook || DEFAULT_CONFIG.socialFacebook,
+          socialInstagram: db.social_instagram || DEFAULT_CONFIG.socialInstagram,
+          socialTiktok: db.social_tiktok || DEFAULT_CONFIG.socialTiktok,
+          socialWhatsapp: db.social_whatsapp || DEFAULT_CONFIG.socialWhatsapp,
+          yapeNumber: db.yape_number || DEFAULT_CONFIG.yapeNumber,
+          yapeName: db.yape_name || DEFAULT_CONFIG.yapeName,
+          plinNumber: db.plin_number || DEFAULT_CONFIG.plinNumber,
+          plinName: db.plin_name || DEFAULT_CONFIG.plinName,
+          bcpAccount: db.bcp_account || DEFAULT_CONFIG.bcpAccount,
+          bcpCCI: db.bcp_cci || DEFAULT_CONFIG.bcpCCI,
+          bcpName: db.bcp_name || DEFAULT_CONFIG.bcpName,
+          interbankAccount: db.interbank_account || DEFAULT_CONFIG.interbankAccount,
+          interbankCCI: db.interbank_cci || DEFAULT_CONFIG.interbankCCI,
+          interbankName: db.interbank_name || DEFAULT_CONFIG.interbankName
+        });
       }
     } catch (e) {
-      console.error("Error loading data:", e);
+      console.error("Critical error loading data:", e);
     }
   };
 
@@ -122,18 +142,52 @@ const App: React.FC = () => {
   }, []);
 
   const handleUpdateConfig = async (newConfig: AcademyConfig) => {
-    // Sincronizar nombres para Supabase
+    // Mapear estrictamente los nombres de campos de React a snake_case de SQL
     const payload = {
       id: 1,
-      ...newConfig,
-      logo_url: newConfig.logoUrl,
-      contact_phone: newConfig.contactPhone,
-      contact_email: newConfig.contactEmail,
-      contact_address: newConfig.contactAddress
+      logo_url: newConfig.logoUrl || "",
+      hero_images: newConfig.heroImages || [],
+      about_images: newConfig.aboutImages || [],
+      welcome_message: newConfig.welcomeMessage || "",
+      intro_slides: newConfig.introSlides || [],
+      staff_stories: newConfig.staffStories || [],
+      contact_phone: newConfig.contactPhone || "",
+      contact_email: newConfig.contactEmail || "",
+      contact_address: newConfig.contactAddress || "",
+      social_facebook: newConfig.socialFacebook || "",
+      social_instagram: newConfig.socialInstagram || "",
+      social_tiktok: newConfig.socialTiktok || "",
+      social_whatsapp: newConfig.socialWhatsapp || "",
+      yape_number: newConfig.yapeNumber || "",
+      yape_name: newConfig.yapeName || "",
+      plin_number: newConfig.plinNumber || "",
+      plin_name: newConfig.plinName || "",
+      bcp_account: newConfig.bcpAccount || "",
+      bcp_cci: newConfig.bcpCCI || "",
+      bcp_name: newConfig.bcpName || "",
+      interbank_account: newConfig.interbankAccount || "",
+      interbank_cci: newConfig.interbankCCI || "",
+      interbank_name: newConfig.interbankName || ""
     };
+    
+    console.log("Saving configuration payload:", payload);
     const result = await supabaseFetch('PATCH', 'academy_config', payload);
-    if (!result?.error) { setConfig(newConfig); return true; }
-    return false;
+    
+    if (!result?.error) {
+      setConfig(newConfig);
+      return true;
+    } else {
+      const errorMsg = result.error.message || JSON.stringify(result.error);
+      console.error("Supabase Save Error Details:", result.error);
+      
+      // Si el error indica que faltan columnas, avisar al usuario
+      if (errorMsg.includes('column') || errorMsg.includes('404')) {
+        alert("ERROR: La base de datos no tiene las nuevas columnas de Interbank.\n\nPor favor, ejecuta el script SQL en Supabase para agregar 'interbank_account', 'interbank_cci' e 'interbank_name'.");
+      } else {
+        alert(`Error al guardar: ${errorMsg}`);
+      }
+      return false;
+    }
   };
 
   const handleUpdateSchedules = async (newSchedules: ClassSchedule[]) => {

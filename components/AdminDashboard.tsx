@@ -37,6 +37,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [paymentStudent, setPaymentStudent] = useState<Student | null>(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [attendanceGroupId, setAttendanceGroupId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [localConfig, setLocalConfig] = useState<AcademyConfig>({ ...config });
   const [localSchedules, setLocalSchedules] = useState<ClassSchedule[]>([...schedules]);
@@ -95,6 +96,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     await onUpdateStudent({ ...student, attendance_history: history });
   };
 
+  const handleSaveAll = async () => {
+    setIsSaving(true);
+    try {
+      if(activeTab === 'schedules') {
+        await onUpdateSchedules(localSchedules);
+        alert('¡Horarios actualizados con éxito!');
+      } else {
+        const ok = await onUpdateConfig(localConfig);
+        if (ok) alert('¡Configuración guardada correctamente en la nube!');
+      }
+    } catch (e) {
+      alert('Error inesperado al guardar. Revisa la consola.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const labelClasses = "block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1";
   const inputClasses = "w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-blue-500/10 outline-none text-sm font-bold transition-all shadow-inner";
 
@@ -134,11 +152,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                <button onClick={() => setShowRegisterModal(true)} className="px-8 py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase shadow-xl flex items-center gap-3 hover:bg-blue-600 transition-all"><Plus size={20}/> Nueva Matrícula</button>
             )}
             {(activeTab === 'schedules' || activeTab === 'content' || activeTab === 'settings') && (
-               <button onClick={async () => {
-                 if(activeTab === 'schedules') await onUpdateSchedules(localSchedules);
-                 else await onUpdateConfig(localConfig);
-                 alert('¡Cambios publicados en la web!');
-               }} className="px-10 py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase shadow-2xl hover:bg-blue-700 transition-all flex items-center gap-3"><Save size={20}/> Guardar Cambios</button>
+               <button 
+                 disabled={isSaving}
+                 onClick={handleSaveAll} 
+                 className={`px-10 py-5 ${isSaving ? 'bg-slate-400' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-2xl font-black text-xs uppercase shadow-2xl transition-all flex items-center gap-3`}
+               >
+                 {isSaving ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Save size={20}/>}
+                 {isSaving ? 'Guardando...' : 'Publicar Cambios'}
+               </button>
             )}
             {attendanceGroupId && <button onClick={() => setAttendanceGroupId(null)} className="px-8 py-5 bg-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase hover:bg-slate-300 transition-all">Regresar</button>}
           </div>
@@ -272,27 +293,40 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {activeTab === 'settings' && (
             <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 pb-32">
               <div className="bg-white p-12 rounded-[3.5rem] shadow-sm border border-slate-100 grid md:grid-cols-2 gap-8">
-                 <div className="md:col-span-2 text-blue-600 font-black text-xl italic uppercase tracking-tighter border-b pb-4 flex items-center gap-4"><Smartphone/> Contacto</div>
+                 <div className="md:col-span-2 text-blue-600 font-black text-xl italic uppercase tracking-tighter border-b pb-4 flex items-center gap-4"><Smartphone/> Contacto Principal</div>
                  <div><label className={labelClasses}>Teléfono</label><input value={localConfig.contactPhone} onChange={e => setLocalConfig({...localConfig, contactPhone: e.target.value})} className={inputClasses}/></div>
                  <div><label className={labelClasses}>WhatsApp</label><input value={localConfig.socialWhatsapp} onChange={e => setLocalConfig({...localConfig, socialWhatsapp: e.target.value})} className={inputClasses}/></div>
+                 <div><label className={labelClasses}>Correo Electrónico</label><input value={localConfig.contactEmail} onChange={e => setLocalConfig({...localConfig, contactEmail: e.target.value})} className={inputClasses}/></div>
+                 <div><label className={labelClasses}>Dirección Principal</label><input value={localConfig.contactAddress} onChange={e => setLocalConfig({...localConfig, contactAddress: e.target.value})} className={inputClasses}/></div>
               </div>
-              <div className="bg-white p-12 rounded-[3.5rem] shadow-sm border border-slate-100 grid md:grid-cols-3 gap-8">
-                 <div className="md:col-span-3 text-emerald-600 font-black text-xl italic uppercase tracking-tighter border-b pb-4 flex items-center gap-4"><CreditCard/> Pagos</div>
+              
+              <div className="bg-white p-12 rounded-[3.5rem] shadow-sm border border-slate-100 grid md:grid-cols-4 gap-8">
+                 <div className="md:col-span-4 text-emerald-600 font-black text-xl italic uppercase tracking-tighter border-b pb-4 flex items-center gap-4"><CreditCard/> Pasarelas & Cuentas de Pago</div>
+                 
                  <div className="space-y-4 bg-slate-50 p-6 rounded-[2.5rem] shadow-inner">
                    <p className="font-black text-[10px] text-blue-500 uppercase">YAPE</p>
                    <input value={localConfig.yapeNumber} onChange={e => setLocalConfig({...localConfig, yapeNumber: e.target.value})} className={inputClasses} placeholder="Número"/>
-                   <input value={localConfig.yapeName} onChange={e => setLocalConfig({...localConfig, yapeName: e.target.value})} className={inputClasses} placeholder="Titular"/>
+                   <input value={localConfig.yapeName} onChange={e => setLocalConfig({...localConfig, yapeName: e.target.value})} className={inputClasses} placeholder="Nombre"/>
                  </div>
+                 
                  <div className="space-y-4 bg-slate-50 p-6 rounded-[2.5rem] shadow-inner">
                    <p className="font-black text-[10px] text-emerald-500 uppercase">PLIN</p>
                    <input value={localConfig.plinNumber} onChange={e => setLocalConfig({...localConfig, plinNumber: e.target.value})} className={inputClasses} placeholder="Número"/>
-                   <input value={localConfig.plinName} onChange={e => setLocalConfig({...localConfig, plinName: e.target.value})} className={inputClasses} placeholder="Titular"/>
+                   <input value={localConfig.plinName} onChange={e => setLocalConfig({...localConfig, plinName: e.target.value})} className={inputClasses} placeholder="Nombre"/>
                  </div>
+                 
                  <div className="space-y-4 bg-slate-50 p-6 rounded-[2.5rem] shadow-inner">
-                   <p className="font-black text-[10px] text-slate-900 uppercase tracking-widest">BCP</p>
+                   <p className="font-black text-[10px] text-slate-900 uppercase">BCP</p>
                    <input value={localConfig.bcpAccount} onChange={e => setLocalConfig({...localConfig, bcpAccount: e.target.value})} className={inputClasses} placeholder="Cuenta"/>
                    <input value={localConfig.bcpCCI} onChange={e => setLocalConfig({...localConfig, bcpCCI: e.target.value})} className={inputClasses} placeholder="CCI"/>
                    <input value={localConfig.bcpName} onChange={e => setLocalConfig({...localConfig, bcpName: e.target.value})} className={inputClasses} placeholder="Titular"/>
+                 </div>
+
+                 <div className="space-y-4 bg-orange-50 border border-orange-100 p-6 rounded-[2.5rem] shadow-inner">
+                   <p className="font-black text-[10px] text-orange-600 uppercase italic">INTERBANK</p>
+                   <input value={localConfig.interbankAccount} onChange={e => setLocalConfig({...localConfig, interbankAccount: e.target.value})} className={inputClasses} placeholder="N° Cuenta"/>
+                   <input value={localConfig.interbankCCI} onChange={e => setLocalConfig({...localConfig, interbankCCI: e.target.value})} className={inputClasses} placeholder="CCI Interbank"/>
+                   <input value={localConfig.interbankName} onChange={e => setLocalConfig({...localConfig, interbankName: e.target.value})} className={inputClasses} placeholder="Titular Interbank"/>
                  </div>
               </div>
             </motion.div>
